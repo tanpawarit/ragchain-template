@@ -1,3 +1,10 @@
+# ragchain-chatbot (Typhoon)
+
+RAG Chain Chatbot Project
+
+## Project Structure
+
+```
 typhoon/
 ├── .venv/
 ├── artifacts/
@@ -38,3 +45,4 @@ typhoon/
 ├── pyproject.toml
 ├── README.md
 └── uv.lock
+```
