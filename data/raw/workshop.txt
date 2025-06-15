@@ -1,0 +1,60 @@
+ฟรีเครื่องมือ Investic Analytics Studio เต็มๆ 1 เดือน!
+Online Workshops
+ออกแบบมาเพื่อให้คุณได้ลงมือทำจริง พร้อมเทคนิคและสิทธิ์ได้เครื่องมือที่ใช้งานตลอด 1 เดือน เพื่อลุยเทรดในตลาดกันจริงๆ
+
+**Workshop Details**
+
+- **Online Workshops "จับมือเทรดด้วย Quant Data"**
+  - เรียนรู้แบบเจาะลึกกับเหล่า Guru Quant พร้อมใช้ฟรีเครื่องมือ Investic Analytics Studio เต็มๆ 1 เดือน!
+- **TFEX - Win rate 100% จับ Panic Sell ด้วย Bollinger Band Market Breadth**
+  - เรียนรู้กลยุทธ์หาจุดกลับตัวของเทรนด์ (Trend Reversal Points) เพิ่มความแม่นยำในการจับจังหวะตลาด
+  - เข้าใจการใช้เครื่องมือ Bollinger Band Panic Sell ผู้สอนใช้เครื่องมือนี้จับจุดต่ำสุดของตลาด (Catch Bottom) ได้อย่างชัดเจนในปี 2016
+  - จับสัญญาณซื้อขาย จากตัวอย่างการใช้โมเดลในช่วงเหตุการณ์สำคัญ เช่น วิกฤตน้ำท่วมปี 2554 และช่วงตลาดกระทิงปี 2555-2556
+  - โดย คุณแชมป์ เจ้าของเพจ PK’s Trading Diary
+- **Crypto - หาเหรียญ 10x แบบไม่ต้องพึ่งดวง**
+  - เรียนรู้พื้นฐาน Crypto Investing ตั้งแต่ภาพรวมตลาด, วัฏจักร Bitcoin (Bitcoin Cycle)
+  - เชี่ยวชาญการ "คัดรายตัว" ค้นหาเหรียญที่มีโอกาสเติบโต 10 เท่า (10X Coins) ด้วยวิธีการที่เป็นระบบ
+  - วิเคราะห์ Sector และผู้นำเทรนด์ เข้าใจกลุ่มอุตสาหกรรมต่างๆ (Blockchain, DeFi, Infrastructure, Metaverse, RWA ฯลฯ) และรู้วิธีระบุเทรนด์ในอนาคต รวมถึง "First Mover" (ผู้นำเทรนด์) ที่จะได้รับประโยชน์
+  - บริหารพอร์ตอย่างมั่นใจ เรียนรู้กลยุทธ์การบริหารพอร์ตโฟลิโอ (Portfolio Management), วิธีการจัดสรรเงินทุน, และกลยุทธ์บริหารความเสี่ยงสำหรับการเทรดที่คาดหวังผลตอบแทนสูง เช่น "การจับกระแส Narrative"
+  - โดย คุณเหริน Analyst จาก Cryptomind Research
+- **Elliott Wave 3X จับเวฟที่ทรงพลังที่สุด**
+  - โฟกัสที่ Wave 3 Extension (3X) เรียนรู้การระบุและเทรดใน "คลื่นที่วิ่งแรงที่สุด" เพื่อเป้าหมายการทำกำไรสูงสุดในเวลาอันสั้น
+  - เข้าใจโครงสร้างตลาดสำหรับ Wave 3X รวมถึงการทำความเข้าใจวงจรคลื่นซ้อน (Nested Cycles) ทั้ง Higher Degree Cycle และ Lower Degree Cycle
+  - ใช้ Fibonacci Retracement อย่างมือโปร เพื่อช่วยหาจุดสิ้นสุดที่เป็นไปได้ของ Wave 2 ซึ่งเป็นจุดเข้าสำคัญสำหรับ Wave 3
+  - กลยุทธ์เข้าเทรดและ Stop Loss ที่ใช้ได้จริง พร้อมตัวอย่างอัตราส่วน Risk/Reward ที่หลากหลาย (เช่น 1:3 ถึง 1:14) จากโครงสร้างคลื่นและระดับ Fibonacci
+  - เข้าใจ Trade-offs ของ Stop Loss:** ระหว่างการตั้ง Stop Loss แคบ (โอกาส Reward สูง แต่ Win Rate อาจต่ำกว่า) และกว้าง (โอกาส Reward ต่ำกว่า แต่ Win Rate อาจสูงกว่า)
+  - โดย คุณคิด เจ้าของเพจ New Genesis
+- **Gold - รู้ทันแนวรับ แนวต้านของเจ้ามือทองคำด้วย OI และเครื่องมือ Market Maker Data Gold Option OI**
+  - เข้าใจกลไก Market Maker เรียนรู้วิธีการทำงานของผู้เล่นรายใหญ่ และข้อจำกัดด้านเงินทุนของพวกเขาส่งผลต่อราคาอย่างไร
+  - ทฤษฎี "Block Trading" ในทองคำ เข้าใจงานวิจัยและข้อมูล (Normal Distribution, Encoding Visualization) ที่สนับสนุนว่าราคาทองคำมักเคลื่อนที่เป็น "บล็อก" หรือ "โซนราคา" (เช่น $5, $25, $50, $100) และกระโดดระหว่างบล็อกเหล่านี้
+  - เพิ่มโอกาสรอดในการเทรด ความเข้าใจการเคลื่อนที่แบบบล็อก "ช่วยให้เรารอดตายจากการเทรดได้เยอะ"
+  - ปรับ Stop Loss ตามความผันผวน เข้าใจความจำเป็นในการปรับระยะ Stop Loss ตามความผันผวนตลาด (เช่น ATR) แทนที่จะใช้ระยะคงที่
+  - โดย คุณเอ็มและคุณเอ เจ้าของเพจ M traders
+
+**ถาม-ตอบเกี่ยวกับเวิร์กช็อป**
+
+**ถาม:** Investic Analytics Studio เสนออะไร?
+   - **ตอบ:** เสนอการเข้าถึงเวิร์กช็อปและข้อมูลเชิงเทคนิคฟรีเป็นเวลาหนึ่งเดือน
+
+**ถาม:** จุดเด่นของเวิร์กช็อป TFEX คืออะไร?
+   - **ตอบ:** เน้นการบรรลุอัตราการชนะ 100% โดยใช้ Bollinger Band Market Breadth
+
+**ถาม:** หัวข้อหลักในเวิร์กช็อป Crypto คืออะไร?
+   - **ตอบ:** ครอบคลุมการลงทุนใน Crypto, วัฏจักรของ Bitcoin และการวิเคราะห์ภาคส่วน
+
+**ถาม:** What is the focus of the Elliott Wave 3X workshop?
+A: The focus is on Wave 3 Extension (3X) to learn how to identify and trade in the most powerful wave for maximum profit in a short time.
+
+Q: What will I learn from the Crypto workshop?
+A: You will learn the basics of Crypto Investing, how to select coins with 10x growth potential, analyze sectors and trends, and manage your portfolio with confidence.
+
+Q: How does the TFEX workshop help me?
+A: The TFEX workshop teaches you how to identify trend reversal points, use Bollinger Band Panic Sell, and catch market bottoms, with a focus on practical examples and real-world applications.
+
+**Additional Resources**
+
+- Investic Analytics Studio: Get access to the full suite of tools for 1 month to practice what you learn in the workshops.
+- Cryptomind Research: Additional resources and research papers on Crypto Investing and market trends.
+- PK’s Trading Diary: Follow the journey of a successful trader and learn from their experiences.
+- New Genesis: Insights and analysis on Elliott Wave and market trends.
+- M traders: Tips and strategies for trading Gold and other markets.

@@ -1,0 +1,16 @@
+paths:
+  data_folder: "data/raw"
+  file_names:
+    - "workshop.txt"
+    - "rerun.txt"
+    - "overall.txt"
+  faiss_index: "artifacts/faiss_product_index"
+
+models:
+  embedding: "text-embedding-3-small"
+  llm: "typhoon-v2.1-12b-instruct"
+
+retriever:
+  search_type: "similarity"
+  k_value: 4
+ 
