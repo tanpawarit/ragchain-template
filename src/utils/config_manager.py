@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""Thin wrapper around **YAML** to keep call-sites minimal and testable."""
+
 import os
 from typing import Any, Dict
 import yaml

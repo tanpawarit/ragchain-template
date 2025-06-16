@@ -1,0 +1,78 @@
+{"messages": [{"role": "user", "content": "เรียนผ่านวีดีโอเฟซบุีกย้อนหลัง หรือเรียนในแฟลตฟอร์มหรือยังไงครับ"}, {"role": "assistant", "content": "เรามีทั้งหมด 5 คอร์สนะครับ\n1.python for investing 101 5300  \n2.ML for investing 101 8500  \n3.ML for investing 201 8500 \n4.Deep Learning for investing 8500 \n5.Technical...\nคอร์ส 1,2 เนื้อหารวมกันราวๆ 40-50 ชั่วโมงครับ รวมเวลาทำโจทย์  คอร์ส 4 เรียนไปแล้ว 1 part ครับ  อีก 1 part เรียนหลังสงกรานต์\nคอร์ส 3 เลื่อนเปิด คนเรียนร้องขอชีวิต ครับ\nบอกว่าเรียนไม่ไหวแล้ว"}]}
+{"messages": [{"role": "user", "content": "แล้วปกติถ้าลงคอร์สเรียนไปแล้ว จะมีกลุ่มสำหรับสอบถามไหมครับ หรือว่าต้องสอบถามผ่านทางแชทเพจอย่างเดียวครับ"}, {"role": "assistant", "content": "มีกลุ่มปิดสำหรับสอบถามครับ"}]}
+{"messages": [{"role": "user", "content": "สนใจคอร์สเรียนครับ ไม่ทราบว่ามีคอร์สอะไรบ้างครับ"}, {"role": "assistant", "content": "เรามีทั้งหมด 5 คอร์สนะครับ\n1.python for investing 101 5300\n2.ML for investing 101 8500\n3.ML for investing 201 8500\n4.Deep Learning for investing 8500\n5.Technical analysis with machine learning 8500"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ส่วนลดนักศึกษาปัจจุบันก็มีนะครับ เหลือ 4500 ครับ"}]}
+{"messages": [{"role": "user", "content": "อยากขอคำแนะนำครับ พอดีผมอยากศึกษาเรื่องการลงทุนโดยใช้ quant trading ครับ แต่ไม่มีพื้นฐานด้านนี้เลย (จบวิศวะมาครับ เขียนโค้ดได้นิดหน่อย) ไม่ทราบว่าควรเริ่มต้นอย่างไรดีครับ"}, {"role": "assistant", "content": "ถ้ายังไม่มีพื้นฐาน python แนะนำให้ลงเรียนคอร์ส python for investing 101 ครับ\nเพราะจะสอนตั้งแต่พื้นฐานการเขียน python การใช้งาน library ที่จำเป็นสำหรับงาน quant เช่น numpy, pandas, matplotlib ไปจนถึงเรื่องการดึงข้อมูลราคาหุ้น และการทำ backtest แบบง่ายครับ"}]}
+{"messages": [{"role": "user", "content": "มีกลุ่มสำหรับพูดคุย ถาม-ตอบ หลังเรียนจบมั้ยครับ"}, {"role": "assistant", "content": "มีครับผม"}]}
+{"messages": [{"role": "user", "content": "ตอนนี้ยังรับสมัครอยู่ไหมครับ"}, {"role": "assistant", "content": "รับตลอดครับ เป็นคอร์ส online ครับ"}]}
+{"messages": [{"role": "user", "content": "ถ้าต้องการสมัคร ต้องทำอย่างไรบ้างครับ"}, {"role": "assistant", "content": "สามารถโอนเงินตาม qr code นี้ แล้วส่งหลักฐานการโอนเงิน พร้อมชื่อ-นามสกุล เบอร์โทร และอีเมลที่ใช้สำหรับ gmail ในการเข้า google classroom ได้เลยครับ"}]}
+{"messages": [{"role": "user", "content": "ต้องมีพื้นฐานการเขียนโปรแกรมมาก่อนไหมครับ"}, {"role": "assistant", "content": "ถ้าไม่มีพื้นฐาน python มาก่อน แนะนำให้ลงเรียน python for investing 101 ครับ คอร์สนี้จะสอนตั้งแต่พื้นฐาน python สำหรับการลงทุนเลยครับ"}]}
+{"messages": [{"role": "user", "content": "ตอนนี้เต็มหรือยังครับ"}, {"role": "assistant", "content": "ยังเปิดรับสมัครเรื่อยๆครับ เป็นคอร์ส online เรียนเวลาไหนก็ได้ครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ แล้วจะแจ้งอีกทีครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ขอบคุณครับ รอ admin ตอบกลับสักครู่นะครับ ท่านที่สนใจสมัครคอร์สและโอนเงินแล้ว รบกวนแจ้ง ชื่อ-นามสกุล เบอร์โทร และอีเมลที่ใช้สำหรับ gmail ในการเข้า google classroom นะครับ"}]}
+{"messages": [{"role": "user", "content": "ได้เลยครับ\nงาน quant เเต่ผมชอบช่วง crypto สุดเลยครับ 55555"}, {"role": "assistant", "content": "ได้ครับ ถามให้แล้วครับ \nอาจจะรบกวน tag มาด้วยนะคร้าบ\nขอบคุณคร้าบบบ"}]}
+{"messages": [{"role": "user", "content": "ถ้าไม่เคยเขียนโปรแกรมเลย จะเรียนได้ไหมครับ"}, {"role": "assistant", "content": "ถ้าไม่มีพื้นฐาน python มาก่อน แนะนำให้ลงเรียน python for investing 101 ครับ คอร์สนี้จะสอนตั้งแต่พื้นฐาน python สำหรับการลงทุนเลยครับ"}]}
+{"messages": [{"role": "user", "content": "ตอนนี้ยังรับสมัครอยู่ไหมครับ"}, {"role": "assistant", "content": "รับตลอดครับ เป็นคอร์ส online ครับ"}]}
+{"messages": [{"role": "user", "content": "ถ้าต้องการสมัคร ต้องทำอย่างไรบ้างครับ"}, {"role": "assistant", "content": "สามารถโอนเงินตาม qr code นี้ แล้วส่งหลักฐานการโอนเงิน พร้อมชื่อ-นามสกุล เบอร์โทร และอีเมลที่ใช้สำหรับ gmail ในการเข้า google classroom ได้เลยครับ"}]}
+{"messages": [{"role": "user", "content": "รบกวนสอบถามครับ ถ้าอยากจะสมัครเรียน ต้องทำยังไงบ้างครับ"}, {"role": "assistant", "content": "สามารถโอนเงินตาม qr code นี้ แล้วส่งหลักฐานการโอนเงิน พร้อมชื่อ-นามสกุล เบอร์โทร และอีเมลที่ใช้สำหรับ gmail ในการเข้า google classroom ได้เลยครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "ไม่ทราบว่ามีคอร์สอะไรบ้างครับตอนนี้"}, {"role": "assistant", "content": "เรามีทั้งหมด 5 คอร์สนะครับ\n1.python for investing 101 5300\n2.ML for investing 101 8500\n3.ML for investing 201 8500\n4.Deep Learning for investing 8500\n5.Technical analysis with machine learning 8500"}]}
+{"messages": [{"role": "user", "content": "ถ้าเรียนจบแล้ว สงสัย ถามได้ทางไหนครับ"}, {"role": "assistant", "content": "มีกลุ่มปิดสำหรับสอบถามครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "สอบถามครับ คอร์ส python for investing 101 ตอนนี้ยังเปิดรับอยู่ไหมครับ"}, {"role": "assistant", "content": "ยังเปิดรับสมัครเรื่อยๆครับ เป็นคอร์ส online เรียนเวลาไหนก็ได้ครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "สอบถามครับ สนใจคอร์สเรียน ไม่ทราบว่ามีคอร์สอะไรบ้างครับ"}, {"role": "assistant", "content": "เรามีทั้งหมด 5 คอร์สนะครับ\n1.python for investing 101 5300\n2.ML for investing 101 8500\n3.ML for investing 201 8500\n4.Deep Learning for investing 8500\n5.Technical analysis with machine learning 8500"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "สนใจคอร์สเรียน ไม่ทราบว่ามีคอร์สอะไรบ้างครับ"}, {"role": "assistant", "content": "เรามีทั้งหมด 5 คอร์สนะครับ\n1.python for investing 101 5300\n2.ML for investing 101 8500\n3.ML for investing 201 8500\n4.Deep Learning for investing 8500\n5.Technical analysis with machine learning 8500"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "สอบถามหน่อยครับ ถ้าจ่ายเงินแล้วจะสามารถเรียนได้เลยไหมครับ หรือต้องรออะไรหรือป่าวครับ"}, {"role": "assistant", "content": "สามารถเรียนได้เลยครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "สอบถามหน่อยครับ ไม่เคยเขียนโค้ดเลย สามารถเรียนได้ไหมครับ"}, {"role": "assistant", "content": "ถ้าไม่มีพื้นฐาน python มาก่อน แนะนำให้ลงเรียน python for investing 101 ครับ คอร์สนี้จะสอนตั้งแต่พื้นฐาน python สำหรับการลงทุนเลยครับ"}]}
+{"messages": [{"role": "user", "content": "ตอนนี้ยังเปิดรับสมัครอยู่ไหมครับ"}, {"role": "assistant", "content": "รับตลอดครับ เป็นคอร์ส online ครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "ถ้าต้องการสมัคร ต้องทำอย่างไรบ้างครับ"}, {"role": "assistant", "content": "สามารถโอนเงินตาม qr code นี้ แล้วส่งหลักฐานการโอนเงิน พร้อมชื่อ-นามสกุล เบอร์โทร และอีเมลที่ใช้สำหรับ gmail ในการเข้า google classroom ได้เลยครับ"}]}
+{"messages": [{"role": "user", "content": "ตอนนี้ยังรับสมัครอยู่ไหมครับ"}, {"role": "assistant", "content": "รับตลอดครับ เป็นคอร์ส online ครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "ถ้าต้องการสมัคร ต้องทำอย่างไรบ้างครับ"}, {"role": "assistant", "content": "สามารถโอนเงินตาม qr code นี้ แล้วส่งหลักฐานการโอนเงิน พร้อมชื่อ-นามสกุล เบอร์โทร และอีเมลที่ใช้สำหรับ gmail ในการเข้า google classroom ได้เลยครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "สอบถามครับ ถ้าผมไม่มีพื้นฐาน python เลย จะเรียนได้ไหมครับ"}, {"role": "assistant", "content": "ถ้าไม่มีพื้นฐาน python มาก่อน แนะนำให้ลงเรียน python for investing 101 ครับ คอร์สนี้จะสอนตั้งแต่พื้นฐาน python สำหรับการลงทุนเลยครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "ตอนนี้ยังรับสมัครอยู่ไหมครับ"}, {"role": "assistant", "content": "รับตลอดครับ เป็นคอร์ส online ครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "ถ้าต้องการสมัคร ต้องทำอย่างไรบ้างครับ"}, {"role": "assistant", "content": "สามารถโอนเงินตาม qr code นี้ แล้วส่งหลักฐานการโอนเงิน พร้อมชื่อ-นามสกุล เบอร์โทร และอีเมลที่ใช้สำหรับ gmail ในการเข้า google classroom ได้เลยครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "สอบถามครับ คอร์ส python for investing 101 ตอนนี้ยังเปิดรับอยู่ไหมครับ"}, {"role": "assistant", "content": "ยังเปิดรับสมัครเรื่อยๆครับ เป็นคอร์ส online เรียนเวลาไหนก็ได้ครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "สอบถามครับ สนใจคอร์สเรียน ไม่ทราบว่ามีคอร์สอะไรบ้างครับ"}, {"role": "assistant", "content": "เรามีทั้งหมด 5 คอร์สนะครับ\n1.python for investing 101 5300\n2.ML for investing 101 8500\n3.ML for investing 201 8500\n4.Deep Learning for investing 8500\n5.Technical analysis with machine learning 8500"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "สอบถามหน่อยครับ ถ้าจ่ายเงินแล้วจะสามารถเรียนได้เลยไหมครับ หรือต้องรออะไรหรือป่าวครับ"}, {"role": "assistant", "content": "สามารถเรียนได้เลยครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "สอบถามหน่อยครับ ไม่เคยเขียนโค้ดเลย สามารถเรียนได้ไหมครับ"}, {"role": "assistant", "content": "ถ้าไม่มีพื้นฐาน python มาก่อน แนะนำให้ลงเรียน python for investing 101 ครับ คอร์สนี้จะสอนตั้งแต่พื้นฐาน python สำหรับการลงทุนเลยครับ"}]}
+{"messages": [{"role": "user", "content": "ตอนนี้ยังเปิดรับสมัครอยู่ไหมครับ"}, {"role": "assistant", "content": "รับตลอดครับ เป็นคอร์ส online ครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "ถ้าต้องการสมัคร ต้องทำอย่างไรบ้างครับ"}, {"role": "assistant", "content": "สามารถโอนเงินตาม qr code นี้ แล้วส่งหลักฐานการโอนเงิน พร้อมชื่อ-นามสกุล เบอร์โทร และอีเมลที่ใช้สำหรับ gmail ในการเข้า google classroom ได้เลยครับ"}]}
+{"messages": [{"role": "user", "content": "ตอนนี้ยังรับสมัครอยู่ไหมครับ"}, {"role": "assistant", "content": "รับตลอดครับ เป็นคอร์ส online ครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "ถ้าต้องการสมัคร ต้องทำอย่างไรบ้างครับ"}, {"role": "assistant", "content": "สามารถโอนเงินตาม qr code นี้ แล้วส่งหลักฐานการโอนเงิน พร้อมชื่อ-นามสกุล เบอร์โทร และอีเมลที่ใช้สำหรับ gmail ในการเข้า google classroom ได้เลยครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "สอบถามครับ ถ้าผมไม่มีพื้นฐาน python เลย จะเรียนได้ไหมครับ"}, {"role": "assistant", "content": "ถ้าไม่มีพื้นฐาน python มาก่อน แนะนำให้ลงเรียน python for investing 101 ครับ คอร์สนี้จะสอนตั้งแต่พื้นฐาน python สำหรับการลงทุนเลยครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "ตอนนี้ยังรับสมัครอยู่ไหมครับ"}, {"role": "assistant", "content": "รับตลอดครับ เป็นคอร์ส online ครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "ถ้าต้องการสมัคร ต้องทำอย่างไรบ้างครับ"}, {"role": "assistant", "content": "สามารถโอนเงินตาม qr code นี้ แล้วส่งหลักฐานการโอนเงิน พร้อมชื่อ-นามสกุล เบอร์โทร และอีเมลที่ใช้สำหรับ gmail ในการเข้า google classroom ได้เลยครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "สอบถามครับ คอร์ส python for investing 101 ตอนนี้ยังเปิดรับอยู่ไหมครับ"}, {"role": "assistant", "content": "ยังเปิดรับสมัครเรื่อยๆครับ เป็นคอร์ส online เรียนเวลาไหนก็ได้ครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "สอบถามครับ สนใจคอร์สเรียน ไม่ทราบว่ามีคอร์สอะไรบ้างครับ"}, {"role": "assistant", "content": "เรามีทั้งหมด 5 คอร์สนะครับ\n1.python for investing 101 5300\n2.ML for investing 101 8500\n3.ML for investing 201 8500\n4.Deep Learning for investing 8500\n5.Technical analysis with machine learning 8500"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "สอบถามหน่อยครับ ถ้าจ่ายเงินแล้วจะสามารถเรียนได้เลยไหมครับ หรือต้องรออะไรหรือป่าวครับ"}, {"role": "assistant", "content": "สามารถเรียนได้เลยครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}
+{"messages": [{"role": "user", "content": "สอบถามหน่อยครับ ไม่เคยเขียนโค้ดเลย สามารถเรียนได้ไหมครับ"}, {"role": "assistant", "content": "ถ้าไม่มีพื้นฐาน python มาก่อน แนะนำให้ลงเรียน python for investing 101 ครับ คอร์สนี้จะสอนตั้งแต่พื้นฐาน python สำหรับการลงทุนเลยครับ"}]}
+{"messages": [{"role": "user", "content": "ขอบคุณครับ"}, {"role": "assistant", "content": "ยินดีครับ"}]}

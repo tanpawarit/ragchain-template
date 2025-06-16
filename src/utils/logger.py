@@ -17,14 +17,7 @@ LOGGING_CONFIG = {
             "formatter": "standard",
             "level": "INFO",
             "stream": "ext://sys.stdout",
-        }, 
-        # "file": {
-        #     "class": "logging.FileHandler",
-        #     "formatter": "standard",
-        #     "level": "INFO",
-        #     "filename": "analyst_robot.log",
-        #     "encoding": "utf8",
-        # },
+        },  
     },
     "root": {
         "handlers": ["console"],

@@ -1,13 +1,15 @@
 import os
 import time
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any, Tuple, TYPE_CHECKING
 from langchain_core.documents import Document
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 
-from src.utils.config_manager import get_config
+# from src.utils.config_manager import get_config  # retained for back-compat
+from src.utils.app_config import AppConfig
+from src.utils.mlflow_tracker import MLflowTracker
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -19,7 +21,14 @@ class DataIngestionPipeline:
     generating embeddings, and creating a FAISS index for efficient retrieval.
     """
     
-    def __init__(self, model_config_path: Optional[str] = None, environment_config_path: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        cfg: Optional[AppConfig] = None,
+        *,
+        model_config_path: Optional[str] = None,
+        environment_config_path: Optional[str] = None,
+        mlflow_tracker: Optional[MLflowTracker] = None,
+    ) -> None:
         """
         Initialize the data ingestion pipeline.
         
@@ -28,14 +37,23 @@ class DataIngestionPipeline:
         model_config_path : Optional[str]
             Path to the configuration file. If None, the default config path is used.
         """
-        self.model_config = get_config(model_config_path)
-        self.embedding_model_name: str = self.model_config["models"]["embedding"]
-        self.data_folder: str = self.model_config["paths"]["data_folder"]
-        self.file_names: List[str] = self.model_config["paths"]["file_names"]
-        self.faiss_index_path: str = self.model_config["paths"]["faiss_index"]
+        # ------------------------------------------------------------------
+        # Configuration handling
+        # ------------------------------------------------------------------
+        if cfg is None:
+            if model_config_path is None or environment_config_path is None:
+                raise ValueError("Either `cfg` or both config paths must be provided")
+            cfg = AppConfig.from_files(model_config_path, environment_config_path)
+        self.cfg = cfg
+        self.mlflow_tracker = mlflow_tracker
+         
+        self.embedding_model_name = cfg.embedding_model_name
+        self.faiss_index_path = cfg.faiss_index_path
+        self.data_folder = cfg.data_folder
+        self.file_names = cfg.file_names
 
-        self.environment_config = get_config(environment_config_path)
-        self.openai_token: str = self.environment_config["openai"]["token"]
+
+        self.openai_token = cfg.openai_token
         
         # Ensure directories exist
         os.makedirs(os.path.dirname(self.faiss_index_path), exist_ok=True)
@@ -131,7 +149,28 @@ class DataIngestionPipeline:
             
             logger.info(f"Split {len(documents)} documents into {len(chunks)} chunks")
             logger.debug(f"Chunking completed in {time.time() - start_time:.2f} seconds")
-            
+            # TODO: refactor
+            # คุณสามารถวนลูปดูความยาวของแต่ละ chunk ได้
+            for i, chunk in enumerate(chunks):
+                # สำหรับ RecursiveCharacterTextSplitter, len(chunk.page_content) จะให้จำนวนตัวอักษร
+                print(f"Chunk {i+1} length (characters): {len(chunk.page_content)}")
+
+                # หากต้องการนับเป็น tokens (ซึ่ง LLM สนใจมากกว่า)
+                # คุณจะต้องใช้ tokenizer ของโมเดลนั้นๆ
+                # ตัวอย่างสำหรับ OpenAI (ต้องติดตั้ง tiktoken: pip install tiktoken)
+                import tiktoken
+                tokenizer = tiktoken.encoding_for_model(self.embedding_model_name) # หรือ gpt-3.5-turbo, gpt-4o
+                num_tokens = len(tokenizer.encode(chunk.page_content))
+                print(f"Chunk {i+1} length (tokens): {num_tokens}")
+
+            # สถิติโดยรวม
+            average_chunk_length_chars = sum(len(c.page_content) for c in chunks) / len(chunks)
+            print(f"Average chunk length (characters): {average_chunk_length_chars:.2f}")
+ 
+            average_chunk_length_tokens = sum(len(tokenizer.encode(c.page_content)) for c in chunks) / len(chunks)
+            print(f"Average chunk length (tokens): {average_chunk_length_tokens:.2f}")
+
+            logger.info(f"Split {len(documents)} documents into {len(chunks)} chunks")
             return chunks
         except Exception as e:
             logger.error(f"Error chunking documents: {e}")
@@ -268,7 +307,25 @@ class DataIngestionPipeline:
                 "processing_time": time.time() - start_time
             }
             
-            logger.info(f"Data ingestion pipeline completed in {result['processing_time']:.2f} seconds")
+            # MLflow logging ---------------------------------------------------
+            if self.mlflow_tracker:
+                self.mlflow_tracker.log_params({
+                    "embedding_model": self.embedding_model_name,
+                    "semantic_chunking": use_semantic_chunking,
+                    "breakpoint_type": breakpoint_threshold_type,
+                    "chunk_size": chunk_size,
+                    "chunk_overlap": chunk_overlap,
+                })
+                self.mlflow_tracker.log_metrics({
+                    "num_documents": len(documents),
+                    "num_chunks": len(chunks),
+                    "ingest_time_sec": result["processing_time"],
+                })
+                self.mlflow_tracker.log_artifact(result["index_path"])  # faiss dir
+
+            logger.info(
+                f"Data ingestion pipeline completed in {result['processing_time']:.2f} seconds",
+            )
             return result
         except Exception as e:
             logger.error(f"Error in data ingestion pipeline: {e}")

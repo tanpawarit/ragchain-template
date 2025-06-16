@@ -15,4 +15,7 @@ dependencies = [
     "playwright>=1.52.0",
     "tiktoken>=0.9.0",
     "trafilatura>=2.0.0",
+    "mlflow>=3.0.0rc0",
+    "deepeval>=0.20.4",
+    "chromadb>=1.0.12",
 ]
