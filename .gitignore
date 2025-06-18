@@ -175,3 +175,4 @@ cython_debug/
 *playground/
 config.yaml
 artifacts
+data
