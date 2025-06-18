@@ -31,7 +31,7 @@ class AppConfig:
     retriever_search_type: str
     retriever_k_value: int
     openai_token: str
-    typhoon_token: str
+    openrouter_token: str
     prompt_template: str
 
     # ---------------------------------------------------------------------
@@ -60,7 +60,7 @@ class AppConfig:
             retriever_search_type=model_cfg["retriever"]["search_type"],
             retriever_k_value=model_cfg["retriever"]["k_value"],
             openai_token=env_cfg["openai"]["token"],
-            typhoon_token=env_cfg["typhoon"]["token"],
+            openrouter_token=env_cfg["openrouter"]["token"],
             prompt_template=model_cfg.get("template", ""),
         )
 
@@ -75,7 +75,7 @@ class AppConfig:
             "retriever_search_type",
             "retriever_k_value",
             "openai_token",
-            "typhoon_token",
+            "openrouter_token",
             "prompt_template",
         )
         joined = ", ".join(f"{a}={getattr(self, a)!r}" for a in attrs)

@@ -1,37 +1,47 @@
 # ragchain-chatbot (Typhoon)
 
-RAG Chain Chatbot Project
+## Workflow End-to-End 5 เฟส
 
-เส้นทาง Online-Serving (ตอบผู้ใช้แบบ real-time)
-• เรียกเพียง RAGChainRunner.answer()
-• ใช้ FAISS index ที่สร้างไว้แล้ว (โหลดครั้งเดียวตอน start-up)
-• ไม่รัน DeepEval เพราะการวัดผลใช้เวลาหลักวินาทีและต้องมี ground-truth → ทำแบบ batch/offline แทน
-• MLflow logging เฉพาะ metadata เร็ว ๆ เช่น question, latency, model-version แล้วส่งต่อไป async/queue เพื่อไม่บล็อกคำตอบ
-เส้นทาง Offline (Batch / Ops)
-• Job Ingestion – รัน DataIngestionPipeline.run_pipeline() เป็น periodic task (เช่น Airflow, GitHub Actions) เพื่อ:
-– ดึงไฟล์ใหม่ → สร้าง/อัปเดต FAISS → อัปโหลด index ไปที่ S3 / GCS
-– log params+metrics+artifact ไปยัง MLflow Tracking Server ที่รันแยกเครื่อง
-• Job Evaluation – รัน EvaluationPipeline.run() ทุกคืนหรือทุกครั้งที่เปลี่ยนเวอร์ชัน index / LLM
-– โหลด vectorstore ล่าสุด → ยิงคำถามชุดมาตรฐาน → บันทึก score ด้วย MLflow
-– ค่า metric เหล่านี้ใช้ทำแดชบอร์ดคุณภาพ, alert ถ้าประสิทธิภาพตก
-การจัดวางสถาปัตยกรรม
-• MLflow Tracking Server อยู่หลัง DB (e.g. Postgres) + object-storage สำหรับ artifacts
-• API/chatbot container ​mount หรือโหลด index จาก object-storage ระหว่าง start-up
-• ใช้ environment variables (หรือ Vault) ใส่ API keys แทนที่ไฟล์ .env ใน code
-• มี CI/CD pipeline ที่รัน unit-tests, lint, ติด label “model-version”, push Docker image, deploy ผ่าน Kubernetes / ECS
+#### Problem Definition & Baseline
+- เลือกโมเดลพื้นฐาน (Base Model): นำโมเดลสำเร็จรูปที่เก่งมากๆ มาใช้ก่อนเลย เช่น GPT-4o, Typhoon, Llama 3
+- ทดสอบด้วย Prompt Engineering: ลองใช้ Zero-shot (สั่งงานตรงๆ) หรือ Few-shot (ยกตัวอย่างใน prompt) เพื่อทดสอบกับชุดข้อมูลวัดผล
+- ประเมินผล: นี่คือการ eval ครั้งแรกของคุณ เพื่อดูว่าโมเดลพื้นฐานทำได้ดีแค่ไหนโดยไม่ต้องทำอะไรเพิ่มเลย
+- MLflow + DeepEval Connection:
+    - สร้าง Experiment ใหม่ เช่น faq-chatbot-project
+    - Run แรกคือ "Baseline Run"
+    - log_param: model_name="gpt-4o", method="few-shot"
+    - mlflow.evaluate: ใช้กับชุดข้อมูลทดสอบเพื่อเก็บคะแนน Baseline นี้ไว้เป็น "มาตรฐานขั้นต่ำ" ที่ต้องเอาชนะให้ได้
+    
+#### Data Preparation
+- สำหรับ Fine-tuning:
+    - รวบรวมและสร้างชุดข้อมูลสำหรับการ Fine-tune (Instruction/Response pairs) 
+    - ข้อมูลจัดรูปแบบเป็น JSONL
+- สำหรับ RAG (Retrieval-Augmented Generation):
+    - ทำความสะอาด, ตัดแบ่งเอกสาร (Chunking), แล้วนำไปแปลงเป็น Vector เพื่อเก็บใน Vector Database
+- MLflow Connection:
+    - ใช้ mlflow.log_artifact เพื่อบันทึกเวอร์ชันของชุดข้อมูลที่ผ่านการประมวลผลแล้ว เพื่อให้รู้ว่า Run ไหนใช้ข้อมูลเวอร์ชันใด
 
-# nightly DAG
-with MLflowTracker(experiment_name="rag_prod") as t:
-    # 1) อัปเดต index
-    ingestion = DataIngestionPipeline(cfg, mlflow_tracker=t)
-    vs = ingestion.get_or_create_vectorstore()
+#### The Development Loop
+- ลองยังไม่ Fine-tune (เน้น Prompt Engineering และ RAG)
+    - ปรับปรุง Prompt: Prompt Engineering แบบต่างๆ
+    - สร้าง/ปรับปรุงระบบ RAG: เปลี่ยน Embedding Model, ปรับขนาด Chunk, เปลี่ยนวิธี Retriever (search_type, k_value or rerank)
+    - เปรียบเทียบผลลัพธ์กับ Baseline  
+- MLflow Connection:
+    - ทุกการเปลี่ยนแปลงคือ Run ใหม่
+    - ใช้ log_param บันทึก Prompt Template, log_dict บันทึก Config ของ RAG
+    - ใช้ mlflow + deepeval เพื่อเปรียบเทียบผลลัพธ์ของแต่ละ Run ในหน้า UI อย่างชัดเจน
 
-    # 2) วัดผล
-    evaluator = EvaluationPipeline(cfg, vectorstore=vs, mlflow_tracker=t)
-    evaluator.run(questions=test_qs, ground_truth_docs=gt_docs)
+#### Red Teaming (Advanced Evaluation)
+- Safety & Security:
+    - Apply and test with guardrails
+    - Build based on OWASP Top 10: LLM & Generative AI Security Risks
+- Robustness: ทดสอบกับ Input ที่มีคำผิด, ใช้ภาษาแปลกๆ, หรือเป็นกรณีที่คาดไม่ถึง (Edge Cases)
+- MLflow Connection: 
+    - สร้าง Experiment ใหม่สำหรับ "Safety & Robustness Testing" โดยเฉพาะ และใช้ mlflow + deepeval 
 
-# image build & deploy happens separately
-– หลัง job เสร็จ MLflow UI/Databricks ช่วยดู timeline ของ metrics, artifacts
-– Container API จะ wget index ล่าสุดจาก S3 ณ start-up (หรือ mount ผ่าน volume) แล้วพร้อมตอบคำถาม
-
+#### Deployment & Monitoring
+- Infrastructure: cloud run service, posgres เก็บ log, หากใช้ model finetune ต้องมี gcs bucket เก็บ model
+- MLflow Connection:
+    - ใช้ MLflow Model Registry ในการจัดการ Lifecycle ของโมเดล (Staging -> Production)
+    - Production service จะโหลดโมเดลจาก Model Registry (models:/my-chatbot/Production)
 สรุป : ใน production จะ “แยก” เส้นทาง serving และ evaluation ออกจากกัน — เส้นทางตอบผู้ใช้ต้องเร็ว, เส้นทางวัดผล/สร้าง index ทำเป็นงาน batch และใช้ MLflow เพื่อเก็บร่องรอยทั้งหมดให้ตรวจสอบย้อนหลังได้ง่าย.

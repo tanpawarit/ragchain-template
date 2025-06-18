@@ -176,3 +176,5 @@ cython_debug/
 config.yaml
 artifacts
 data
+mlruns
+models

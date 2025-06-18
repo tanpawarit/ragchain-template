@@ -5,7 +5,7 @@ from __future__ import annotations
 It stitches together:
 • Vectorstore retriever (built or loaded via DataIngestionPipeline)
 • Prompt template from YAML config
-• Typhoon LLM endpoint (ChatOpenAI)
+• OpenRouter LLM endpoint (ChatOpenAI)
 
 Use :class:`RAGChainRunner` programmatically or via the convenience
 ``python -m src.components.ragchain`` CLI (see ragchain.py).
@@ -56,10 +56,11 @@ class RAGChainRunner:
         # LLM + Prompt
         # ------------------------------------------------------------------
         self.llm = ChatOpenAI(
-            api_key=cfg.typhoon_token,
-            base_url="https://api.opentyphoon.ai/v1",
-            model=cfg.llm_model_name,
+            model=cfg.llm_model_name,  # Using the model specified in model_config.yaml
+            openai_api_key=cfg.openrouter_token,
+            openai_api_base="https://openrouter.ai/api/v1",  # Pointing API to OpenRouter
             temperature=0,
+            max_tokens=1024
         )
         prompt = ChatPromptTemplate.from_template(cfg.prompt_template)
 

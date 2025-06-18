@@ -8,7 +8,7 @@ paths:
 
 models:
   embedding: "text-embedding-3-small"
-  llm: "typhoon-v2.1-12b-instruct"
+  llm: "meta-llama/llama-3.3-8b-instruct:free"
 
 retriever:
   search_type: "similarity"
