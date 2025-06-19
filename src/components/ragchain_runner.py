@@ -5,7 +5,7 @@ from __future__ import annotations
 It stitches together:
 • Vectorstore retriever (built or loaded via DataIngestionPipeline)
 • Prompt template from YAML config
-• OpenRouter LLM endpoint (ChatOpenAI)
+• OpenAI ChatGPT endpoint (ChatOpenAI)
 
 Use :class:`RAGChainRunner` programmatically or via the convenience
 ``python -m src.components.ragchain`` CLI (see ragchain.py).
@@ -57,8 +57,7 @@ class RAGChainRunner:
         # ------------------------------------------------------------------
         self.llm = ChatOpenAI(
             model=cfg.llm_model_name,  # Using the model specified in model_config.yaml
-            openai_api_key=cfg.openrouter_token,
-            openai_api_base="https://openrouter.ai/api/v1",  # Pointing API to OpenRouter
+            openai_api_key=cfg.openai_token,
             temperature=0,
             max_tokens=1024
         )

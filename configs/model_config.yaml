@@ -8,7 +8,7 @@ paths:
 
 models:
   embedding: "text-embedding-3-small"
-  llm: "meta-llama/llama-3.3-8b-instruct:free"
+  llm: "gpt-3.5-turbo"
 
 retriever:
   search_type: "similarity"
