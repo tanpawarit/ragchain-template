@@ -76,9 +76,75 @@ class RAGChainRunner:
     # ------------------------------------------------------------------
     # Public helpers
     # ------------------------------------------------------------------
-    def answer(self, question: str) -> str:
-        """Return RAG answer for *question*."""
+    def answer(self, question: str, user_id: Optional[str] = None) -> str:
+        """Return RAG answer for *question*.
+        
+        Args:
+            question: The user's question
+            user_id: Optional user identifier for tracking
+            
+        Returns:
+            The generated answer
+        """
+        import time
+        start_time = time.time()
+        
+        # ดึงเอกสารที่เกี่ยวข้อง (สำหรับการบันทึก)
+        retrieved_docs = self.retriever.get_relevant_documents(question)
+        
+        # สร้างคำตอบ
         reply: str = self.chain.invoke(question)
+        
+        # คำนวณเวลาที่ใช้
+        latency = time.time() - start_time
+        
+        # บันทึกข้อมูลใน MLflow
         if self.tracker:
-            self.tracker.log_params({"question": question})
+            # Only log essential data - save storage space
+            params = {
+                "question": question[:200],  # Store only first 200 characters of the question
+            }
+            
+            # Add user ID if available
+            if user_id:
+                params["user_id"] = user_id
+                
+            self.tracker.log_params(params)
+            
+            # Log model and retriever data (only once per day)
+            from datetime import datetime
+            today = datetime.now().strftime("%Y-%m-%d")
+            config_logged_key = f"config_logged_{today}"
+            
+            # Check if config has been logged today already
+            import mlflow
+            try:
+                # Try to fetch runs that have logged config for today
+                runs = mlflow.search_runs(
+                    filter_string=f"params.{config_logged_key} = 'true'",
+                    order_by=["start_time DESC"],
+                    max_results=1
+                )
+                config_logged_today = len(runs) > 0
+            except:
+                config_logged_today = False
+                
+            # Log config data only for the first run of the day
+            if not config_logged_today:
+                self.tracker.log_params({
+                    config_logged_key: "true",
+                    "llm_model": self.cfg.llm_model_name,
+                    "embedding_model": self.cfg.embedding_model_name,
+                    "retriever_k": self.cfg.retriever_k_value,
+                    "retriever_search_type": self.cfg.retriever_search_type,
+                    "prompt_template_name": self.cfg.prompt_template_name,
+                    "prompt_template_version": self.cfg.prompt_template_version or "latest",
+                })
+            
+            # Only log essential metrics
+            self.tracker.log_metrics({
+                "latency": latency,
+                "num_retrieved_docs": len(retrieved_docs),
+            })
+        
         return reply

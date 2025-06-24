@@ -14,9 +14,10 @@ Usage
 """
 
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 from src.utils.config_manager import get_config
+from src.prompts.prompt_manager import PromptManager
 
 
 @dataclass(slots=True)
@@ -32,6 +33,8 @@ class AppConfig:
     retriever_k_value: int
     openai_token: str
     prompt_template: str
+    prompt_template_name: str
+    prompt_template_version: Optional[str]
 
     # ---------------------------------------------------------------------
     # Construction helpers
@@ -49,6 +52,28 @@ class AppConfig:
         """
         model_cfg = get_config(model_config_path)
         env_cfg = get_config(environment_config_path)
+        
+        # Get prompt template info from config
+        prompt_template_name = ""
+        prompt_template_version = None
+        prompt_template = ""
+        
+        if "prompt_config" in model_cfg:
+            prompt_template_name = model_cfg["prompt_config"].get("template_name", "")
+            prompt_template_version = model_cfg["prompt_config"].get("version")
+            
+            # Load the prompt template if name is provided
+            if prompt_template_name:
+                try:
+                    prompt_manager = PromptManager()
+                    prompt_template = prompt_manager.get_template(
+                        prompt_template_name, prompt_template_version
+                    )
+                except Exception as e:
+                    print(f"Error loading prompt template: {e}")
+        else:
+            # Fallback to legacy template format
+            prompt_template = model_cfg.get("template", "")
 
         return cls(
             embedding_model_name=model_cfg["models"]["embedding"],
@@ -59,7 +84,9 @@ class AppConfig:
             retriever_search_type=model_cfg["retriever"]["search_type"],
             retriever_k_value=model_cfg["retriever"]["k_value"],
             openai_token=env_cfg["openai"]["token"],
-            prompt_template=model_cfg.get("template", ""),
+            prompt_template=prompt_template,
+            prompt_template_name=prompt_template_name,
+            prompt_template_version=prompt_template_version,
         )
 
     # Convenience pretty-print ------------------------------------------------
@@ -74,6 +101,8 @@ class AppConfig:
             "retriever_k_value",
             "openai_token",
             "prompt_template",
+            "prompt_template_name",
+            "prompt_template_version",
         )
         joined = ", ".join(f"{a}={getattr(self, a)!r}" for a in attrs)
         return f"{self.__class__.__name__}({joined})"
