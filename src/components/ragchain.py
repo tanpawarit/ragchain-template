@@ -1,6 +1,7 @@
 from src.components.ragchain_runner import RAGChainRunner
-from src.utils.app_config import AppConfig
-from src.utils.mlflow_tracker import MLflowTracker 
+from src.utils.config.app_config import AppConfig
+from src.utils.pipeline.mlflow_tracker import MLflowTracker
+from src.utils.pipeline.vectorstore_manager import load_vectorstore
 from typing import Optional
  
 def main() -> None:
@@ -14,7 +15,10 @@ def main() -> None:
         if user_id:
             tracker.log_params({"user_id": user_id})
             
-        rag = RAGChainRunner(cfg, mlflow_tracker=tracker)
+        # Load the vectorstore first
+        vectorstore = load_vectorstore(cfg, data_version="latest", mlflow_tracker=tracker)
+
+        rag = RAGChainRunner(cfg, mlflow_tracker=tracker, vectorstore=vectorstore)
         question = input("💬 Question: ")
         print("🧠 Thinking...")
         answer = rag.answer(question, user_id=user_id if user_id else None)

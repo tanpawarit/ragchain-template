@@ -1,6 +1,8 @@
 import os
 import time
-from typing import Dict, List, Optional, Any, Tuple, TYPE_CHECKING
+import json
+from pathlib import Path
+from typing import Dict, List, Optional, Any, Tuple
 from langchain_core.documents import Document
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -8,9 +10,11 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 
 # from src.utils.config_manager import get_config  # retained for back-compat
-from src.utils.app_config import AppConfig
-from src.utils.mlflow_tracker import MLflowTracker
+from src.utils.config.app_config import AppConfig
+from src.utils.pipeline.mlflow_tracker import MLflowTracker
+from src.utils.pipeline.data_version_manager import DataVersionManager
 from src.utils.logger import get_logger
+
 
 logger = get_logger(__name__)
 
@@ -19,6 +23,8 @@ class DataIngestionPipeline:
     """ 
     This class handles loading documents from files, chunking them into smaller pieces,
     generating embeddings, and creating a FAISS index for efficient retrieval.
+    
+    รองรับ Data Versioning, Index Versioning และ Data Lineage ผ่าน DataVersionManager
     """
     
     def __init__(
@@ -28,14 +34,26 @@ class DataIngestionPipeline:
         model_config_path: Optional[str] = None,
         environment_config_path: Optional[str] = None,
         mlflow_tracker: Optional[MLflowTracker] = None,
+        data_version: str = "latest",
+        gcs_path: Optional[str] = None,
     ) -> None:
         """
         Initialize the data ingestion pipeline.
         
         Parameters
         ----------
+        cfg : Optional[AppConfig]
+            AppConfig object. If None, will be created from config paths.
         model_config_path : Optional[str]
-            Path to the configuration file. If None, the default config path is used.
+            Path to the model configuration file. Required if cfg is None.
+        environment_config_path : Optional[str]
+            Path to the environment configuration file. Required if cfg is None.
+        mlflow_tracker : Optional[MLflowTracker]
+            MLflow tracker for logging experiments. If None, no logging will be performed.
+        data_version : str
+            เวอร์ชันข้อมูลที่ต้องการใช้ (เช่น 'v1.0', 'v1.1', 'latest')
+        gcs_path : Optional[str]
+            เส้นทาง GCS หากใช้ข้อมูลจาก Google Cloud Storage
         """
         # ------------------------------------------------------------------
         # Configuration handling
@@ -48,12 +66,24 @@ class DataIngestionPipeline:
         self.mlflow_tracker = mlflow_tracker
          
         self.embedding_model_name = cfg.embedding_model_name
-        self.faiss_index_path = cfg.faiss_index_path
+        self.base_faiss_index_path = cfg.faiss_index_path
         self.data_folder = cfg.data_folder
         self.file_names = cfg.file_names
-
-
         self.openai_token = cfg.openai_token
+        
+        # สร้าง DataVersionManager
+        self.data_version = data_version
+        self.gcs_path = gcs_path
+        self.version_manager = DataVersionManager(
+            base_data_dir=os.path.dirname(self.data_folder),
+            base_index_dir=os.path.dirname(self.base_faiss_index_path),
+            data_version=data_version,
+            gcs_path=gcs_path
+        )
+        
+        # กำหนดเส้นทาง index ตามเวอร์ชันข้อมูล
+        index_dir = self.version_manager.get_index_path_for_version(data_version)
+        self.faiss_index_path = str(index_dir / os.path.basename(self.base_faiss_index_path))
         
         # Ensure directories exist
         os.makedirs(os.path.dirname(self.faiss_index_path), exist_ok=True)
@@ -69,7 +99,7 @@ class DataIngestionPipeline:
     
     def load_documents(self) -> List[Document]:
         """
-        Load documents from the specified files.
+        Load documents from the specified files using the current data version.
         
         Returns
         -------
@@ -82,26 +112,53 @@ class DataIngestionPipeline:
             If any of the specified files cannot be found.
         """
         documents: List[Document] = []
+        loaded_files: List[str] = []
         
-        for file_name in self.file_names:
-            file_path = os.path.join(self.data_folder, file_name)
-            try:
-                if not os.path.exists(file_path):
-                    logger.warning(f"File not found: {file_path}")
-                    continue
-                    
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content = f.read()
-                    
-                doc = Document(page_content=content, metadata={"source": file_path})
-                documents.append(doc)
-                logger.info(f"Loaded document from {file_path}")
-            except Exception as e:
-                logger.error(f"Error loading document {file_path}: {e}")
-                raise
+        # ดึงเส้นทางไดเรกทอรีของเวอร์ชันข้อมูลที่ต้องการใช้
+        version_dir = self.version_manager.get_data_version_path(self.data_version)
+        
+        # ถ้าใช้ GCS และต้องการดาวน์โหลดข้อมูล
+        if self.gcs_path:
+            downloaded_files = self.version_manager.download_from_gcs(self.gcs_path, self.data_version)
+            if downloaded_files:
+                # ใช้ไฟล์ที่ดาวน์โหลดมาแทน
+                for file_path in downloaded_files:
+                    try:
+                        with open(file_path, "r", encoding="utf-8") as f:
+                            content = f.read()
+                            
+                        doc = Document(page_content=content, metadata={"source": file_path})
+                        documents.append(doc)
+                        loaded_files.append(file_path)
+                        logger.info(f"Loaded document from {file_path} (downloaded from GCS)")
+                    except Exception as e:
+                        logger.error(f"Error loading document {file_path}: {e}")
+                        raise
+        else:
+            # ใช้ไฟล์ในเครื่อง
+            for file_name in self.file_names:
+                file_path = os.path.join(version_dir, file_name)
+                try:
+                    if not os.path.exists(file_path):
+                        logger.warning(f"File not found in version {self.data_version}: {file_path}")
+                        continue
+                        
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        content = f.read()
+                        
+                    doc = Document(page_content=content, metadata={"source": file_path})
+                    documents.append(doc)
+                    loaded_files.append(file_path)
+                    logger.info(f"Loaded document from {file_path} (version {self.data_version})")
+                except Exception as e:
+                    logger.error(f"Error loading document {file_path}: {e}")
+                    raise
         
         if not documents:
-            logger.warning("No documents were loaded")
+            logger.warning(f"No documents were loaded for version {self.data_version}")
+        
+        # เก็บรายการไฟล์ที่โหลดไว้สำหรับสร้าง lineage
+        self.loaded_files = loaded_files
             
         return documents
     
@@ -148,9 +205,7 @@ class DataIngestionPipeline:
             chunks = text_splitter.split_documents(documents)
             
             logger.info(f"Split {len(documents)} documents into {len(chunks)} chunks")
-            logger.debug(f"Chunking completed in {time.time() - start_time:.2f} seconds")
-            # TODO: refactor
-            # คุณสามารถวนลูปดูความยาวของแต่ละ chunk ได้
+            logger.debug(f"Chunking completed in {time.time() - start_time:.2f} seconds") 
             for i, chunk in enumerate(chunks):
                 # สำหรับ RecursiveCharacterTextSplitter, len(chunk.page_content) จะให้จำนวนตัวอักษร
                 print(f"Chunk {i+1} length (characters): {len(chunk.page_content)}")
@@ -176,36 +231,7 @@ class DataIngestionPipeline:
             logger.error(f"Error chunking documents: {e}")
             raise
     
-    def load_vectorstore(self) -> FAISS:
-        """
-        Load an existing FAISS vectorstore if it exists.
-        
-        Returns
-        -------
-        FAISS
-            The loaded FAISS vectorstore.
-            
-        Raises
-        ------
-        FileNotFoundError
-            If the FAISS index does not exist.
-        """
-        faiss_index_dir = os.path.dirname(self.faiss_index_path)
-        
-        if not os.path.exists(self.faiss_index_path):
-            raise FileNotFoundError(f"FAISS index not found at {self.faiss_index_path}")
-            
-        try:
-            start_time = time.time()
-            vectorstore = FAISS.load_local(faiss_index_dir, self.embeddings, allow_dangerous_deserialization=True)
-            logger.info(f"Loaded existing FAISS index from {self.faiss_index_path}")
-            logger.debug(f"Loading completed in {time.time() - start_time:.2f} seconds")
-            return vectorstore
-        except Exception as e:
-            logger.error(f"Error loading FAISS index: {e}")
-            raise RuntimeError(f"Failed to load FAISS index: {e}")
-    
-    def create_embeddings_and_index(self, chunks: List[Document]) -> Tuple[List[str], FAISS]:
+    def create_and_save_vectorstore(self, chunks: List[Document]) -> None:
         """
         Create embeddings for document chunks and build a FAISS index using LangChain's FAISS implementation.
         If an index already exists at the specified path, it will be loaded instead of creating a new one.
@@ -228,194 +254,68 @@ class DataIngestionPipeline:
         start_time = time.time()
         
         try:
-            faiss_index_dir = os.path.dirname(self.faiss_index_path)
-            vectorstore = None
-            
-            # Check if FAISS index files already exist
-            index_file = os.path.join(faiss_index_dir, "index.faiss")
-            docstore_file = os.path.join(faiss_index_dir, "index.pkl")
-            
-            if os.path.exists(index_file) and os.path.exists(docstore_file):
-                logger.info(f"Found existing FAISS index files at {faiss_index_dir}, loading instead of creating new one")
-                # Load existing vectorstore
-                vectorstore = FAISS.load_local(faiss_index_dir, self.embeddings, allow_dangerous_deserialization=True)
-                logger.debug(f"Loaded existing index in {time.time() - start_time:.2f} seconds")
-            else:
-                # If no existing index, create a new one
-                logger.info("No existing FAISS index found, creating new one")
-                vectorstore = FAISS.from_documents(documents=chunks, embedding=self.embeddings)
-                
-                # Save the vectorstore locally
-                vectorstore.save_local(faiss_index_dir)
-                
-                logger.info(f"Created and saved FAISS index with {len(chunks)} vectors using LangChain's FAISS")
-                logger.debug(f"Embedding and indexing completed in {time.time() - start_time:.2f} seconds")
-            
-            # Extract text from chunks for return value consistency
-            texts = [doc.page_content for doc in chunks]
-            
-            return texts, vectorstore
+            faiss_index_dir = self.faiss_index_path
+
+            # This method's responsibility is to create and save the index.
+            # It will overwrite any existing index at the location.
+            logger.info("Creating new FAISS index from provided chunks...")
+            vectorstore = FAISS.from_documents(documents=chunks, embedding=self.embeddings)
+
+            # Save the vectorstore locally to the correct directory
+            vectorstore.save_local(faiss_index_dir)
+
+            logger.info(f"Successfully created and saved new FAISS index with {len(chunks)} vectors to {faiss_index_dir}")
+            logger.debug(f"Embedding and indexing completed in {time.time() - start_time:.2f} seconds")
+
+            return
         except Exception as e:
             logger.error(f"Error creating embeddings or index: {e}")
             raise RuntimeError(f"Failed to create embeddings or index: {e}")
     
-    def run_pipeline(self, chunk_size: int = 1000, chunk_overlap: int = 200, 
-                   use_semantic_chunking: bool = True, breakpoint_threshold_type: str = "percentile") -> Dict[str, Any]:
+    def run(self, chunking_params: Dict[str, Any]) -> None:
         """
-        Run the complete data ingestion pipeline.
-        
-        Parameters
-        ----------
-        chunk_size : int
-            The size of each chunk in characters.
-        chunk_overlap : int
-            The overlap between chunks in characters.
-        use_semantic_chunking : bool
-            Whether to use semantic chunking instead of character-based chunking.
-        breakpoint_threshold_type : str
-            The threshold type for semantic chunking.
-            
-        Returns
-        -------
-        Dict[str, Any]
-            A dictionary containing the results of the pipeline run, including the vectorstore.
+        Run the complete data ingestion pipeline: load, chunk, create index, and save.
+
+        Args:
+            chunking_params: A dictionary of parameters for the chunking process.
         """
         start_time = time.time()
-        
+        logger.info("Starting data ingestion pipeline...")
         try:
-            # Load documents
             documents = self.load_documents()
-            
-            # Chunk documents
-            chunks = self.chunk_documents(
-                documents, 
-                chunk_size=chunk_size, 
-                chunk_overlap=chunk_overlap,
-                use_semantic_chunking=use_semantic_chunking,
-                breakpoint_threshold_type=breakpoint_threshold_type
+            logger.info(f"Loaded {len(documents)} documents.")
+
+            chunks = self.chunk_documents(documents, **chunking_params)
+            logger.info(f"Created {len(chunks)} chunks.")
+
+            self.create_and_save_vectorstore(chunks)
+            logger.info(f"Created and saved vectorstore to {self.faiss_index_path}")
+
+            lineage_record = self.version_manager.create_lineage_record(
+                index_path=self.faiss_index_path,
+                data_version=self.data_version,
+                files_used=getattr(self, "loaded_files", []),
+                parameters=chunking_params
             )
-            
-            # Create embeddings and index
-            texts, vectorstore = self.create_embeddings_and_index(chunks)
-            
-            result: Dict[str, Any] = {
-                "documents": documents,
-                "chunks": chunks,
-                "texts": texts,
-                "vectorstore": vectorstore,
-                "index_path": self.faiss_index_path,
-                "processing_time": time.time() - start_time
-            }
-            
-            # MLflow logging ---------------------------------------------------
+            logger.info("Created lineage record.")
+
             if self.mlflow_tracker:
-                self.mlflow_tracker.log_params({
-                    "embedding_model": self.embedding_model_name,
-                    "semantic_chunking": use_semantic_chunking,
-                    "breakpoint_type": breakpoint_threshold_type,
-                    "chunk_size": chunk_size,
-                    "chunk_overlap": chunk_overlap,
-                })
+                self.mlflow_tracker.log_params(chunking_params)
                 self.mlflow_tracker.log_metrics({
                     "num_documents": len(documents),
                     "num_chunks": len(chunks),
-                    "ingest_time_sec": result["processing_time"],
+                    "ingest_time_sec": time.time() - start_time,
                 })
-                self.mlflow_tracker.log_artifact(result["index_path"])  # faiss dir
+                self.mlflow_tracker.log_artifact(self.faiss_index_path)
+                lineage_file = os.path.join(os.path.dirname(self.faiss_index_path), "lineage.json")
+                if os.path.exists(lineage_file):
+                    self.mlflow_tracker.log_artifact(lineage_file)
+                logger.info("Logged artifacts and metrics to MLflow.")
 
             logger.info(
-                f"Data ingestion pipeline completed in {result['processing_time']:.2f} seconds",
+                f"Data ingestion pipeline completed in {time.time() - start_time:.2f} seconds for data version {self.data_version}"
             )
-            return result
+
         except Exception as e:
-            logger.error(f"Error in data ingestion pipeline: {e}")
+            logger.error(f"Error during data ingestion pipeline: {e}")
             raise
-
-
-    def get_or_create_vectorstore(self, chunk_size: int = 1000, chunk_overlap: int = 200, 
-                          use_semantic_chunking: bool = True, breakpoint_threshold_type: str = "percentile") -> FAISS:
-        """
-        Get an existing vectorstore if it exists, or create a new one by running the pipeline.
-        
-        This method provides a dynamic approach to vectorstore management:
-        - If a FAISS index already exists at the configured path, it loads and returns it
-        - If no index exists, it runs the full pipeline to create one
-        
-        Parameters
-        ----------
-        chunk_size : int
-            The size of each chunk in characters (used only if creating a new index).
-        chunk_overlap : int
-            The overlap between chunks in characters (used only if creating a new index).
-        use_semantic_chunking : bool
-            Whether to use semantic chunking instead of character-based chunking (used only if creating a new index).
-        breakpoint_threshold_type : str
-            The threshold type for semantic chunking (used only if creating a new index).
-            
-        Returns
-        -------
-        FAISS
-            The vectorstore, either loaded from existing index or newly created.
-        """
-        faiss_index_dir = os.path.dirname(self.faiss_index_path)
-        
-        # Check if FAISS index directory exists and contains the necessary files
-        index_file = os.path.join(faiss_index_dir, "index.faiss")
-        docstore_file = os.path.join(faiss_index_dir, "index.pkl")
-        
-        if os.path.exists(index_file) and os.path.exists(docstore_file):
-            logger.info(f"Found existing FAISS index files at {faiss_index_dir}, loading them")
-            try:
-                start_time = time.time()
-                vectorstore = FAISS.load_local(faiss_index_dir, self.embeddings, allow_dangerous_deserialization=True)
-                logger.info(f"Successfully loaded existing FAISS index in {time.time() - start_time:.2f} seconds")
-                return vectorstore
-            except Exception as e:
-                logger.warning(f"Failed to load existing FAISS index: {e}. Will create a new one.")
-                # If loading fails, continue to create a new index
-        else:
-            logger.info(f"FAISS index files not found at {faiss_index_dir} or directory is empty")
-        
-        # If no index exists or loading failed, run the full pipeline
-        logger.info("Running full pipeline to create a new FAISS index")
-        result = self.run_pipeline(
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
-            use_semantic_chunking=use_semantic_chunking,
-            breakpoint_threshold_type=breakpoint_threshold_type
-        )
-        
-        return result["vectorstore"]
-
-# =========== example ===========
-# ---------- กรณีเริ่มต้นใช้งานครั้งแรก (ยังไม่มี index) ----------
-# from src.components.ingestion import DataIngestionPipeline
-# # สร้าง pipeline
-# pipeline = DataIngestionPipeline()
-# # รัน pipeline เต็มรูปแบบ (โหลดเอกสาร, แบ่งชิ้น, สร้าง embeddings และ index)
-# result = pipeline.run_pipeline()
-# # ดึง vectorstore มาใช้
-# vectorstore = result["vectorstore"]
-# # ตัวอย่างการใช้งาน vectorstore เพื่อค้นหาเอกสารที่เกี่ยวข้อง
-# docs = vectorstore.similarity_search("คำถามหรือคีย์เวิร์ดที่ต้องการค้นหา", k=4)
-
-# ---------- กรณีมี index อยู่แล้ว และต้องการใช้งานอย่างรวดเร็ว ----------
-# from src.components.ingestion import DataIngestionPipeline
-# # สร้าง pipeline
-# pipeline = DataIngestionPipeline()
-# # โหลด vectorstore โดยตรง (เร็วกว่าเพราะไม่ต้องโหลดเอกสารและแบ่งชิ้น)
-# try:
-#     vectorstore = pipeline.load_vectorstore()
-#     # ใช้งาน vectorstore
-#     docs = vectorstore.similarity_search("คำถามหรือคีย์เวิร์ดที่ต้องการค้นหา", k=4)
-# except FileNotFoundError:
-#     print("ไม่พบ index ต้องสร้างใหม่ก่อน")
-    
-# ---------- วิธีใหม่ที่ dynamic กว่า (ใช้ get_or_create_vectorstore) ----------
-# from src.components.ingestion import DataIngestionPipeline
-# # สร้าง pipeline
-# pipeline = DataIngestionPipeline()
-# # ใช้เมธอด get_or_create_vectorstore ซึ่งจะโหลด vectorstore ถ้ามีอยู่แล้ว หรือสร้างใหม่ถ้ายังไม่มี
-# vectorstore = pipeline.get_or_create_vectorstore()
-# # ใช้งาน vectorstore ได้เลย โดยไม่ต้องกังวลว่า index จะมีอยู่หรือไม่
-# docs = vectorstore.similarity_search("คำถามหรือคีย์เวิร์ดที่ต้องการค้นหา", k=4)

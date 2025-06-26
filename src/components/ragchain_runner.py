@@ -19,9 +19,9 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_community.vectorstores import FAISS
 from langchain_openai import ChatOpenAI
 
-from src.components.ingestion import DataIngestionPipeline
-from src.utils.app_config import AppConfig
-from src.utils.mlflow_tracker import MLflowTracker
+
+from src.utils.config.app_config import AppConfig
+from src.utils.pipeline.mlflow_tracker import MLflowTracker
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -35,7 +35,7 @@ class RAGChainRunner:
         cfg: AppConfig,
         *,
         mlflow_tracker: Optional[MLflowTracker] = None,
-        vectorstore: Optional[FAISS] = None,
+        vectorstore: FAISS,
     ) -> None:
         self.cfg = cfg
         self.tracker = mlflow_tracker
@@ -43,9 +43,7 @@ class RAGChainRunner:
         # ------------------------------------------------------------------
         # Vectorstore & retriever
         # ------------------------------------------------------------------
-        if vectorstore is None:
-            ingestion = DataIngestionPipeline(cfg, mlflow_tracker=mlflow_tracker)
-            vectorstore = ingestion.get_or_create_vectorstore()
+
         self.vectorstore = vectorstore
         self.retriever = vectorstore.as_retriever(
             search_type=cfg.retriever_search_type,

@@ -16,7 +16,7 @@ Usage
 from dataclasses import dataclass
 from typing import List, Optional
 
-from src.utils.config_manager import get_config
+from src.utils.config.manager import get_config
 from src.prompts.prompt_manager import PromptManager
 
 
