@@ -1,32 +1,31 @@
 import os
 import time
-import json
-from pathlib import Path
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Any, Dict, List, Literal, Optional
+
+from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 from langchain_experimental.text_splitter import SemanticChunker
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from pydantic import SecretStr
 
 # from src.utils.config_manager import get_config  # retained for back-compat
 from src.utils.config.app_config import AppConfig
-from src.utils.pipeline.mlflow_tracker import MLflowTracker
-from src.utils.pipeline.data_version_manager import DataVersionManager
 from src.utils.logger import get_logger
-
+from src.utils.pipeline.data_version_manager import DataVersionManager
+from src.utils.pipeline.mlflow_tracker import MLflowTracker
 
 logger = get_logger(__name__)
 
 
 class DataIngestionPipeline:
-    """ 
+    """
     This class handles loading documents from files, chunking them into smaller pieces,
     generating embeddings, and creating a FAISS index for efficient retrieval.
-    
+
     รองรับ Data Versioning, Index Versioning และ Data Lineage ผ่าน DataVersionManager
     """
-    
+
     def __init__(
         self,
         cfg: Optional[AppConfig] = None,
@@ -35,11 +34,14 @@ class DataIngestionPipeline:
         environment_config_path: Optional[str] = None,
         mlflow_tracker: Optional[MLflowTracker] = None,
         data_version: str = "latest",
-        gcs_path: Optional[str] = None,
+        storage_type: str = "local",
+        gcs_bucket: Optional[str] = None,
+        gcs_prefix: str = "data",
+        project_id: Optional[str] = None,
     ) -> None:
         """
         Initialize the data ingestion pipeline.
-        
+
         Parameters
         ----------
         cfg : Optional[AppConfig]
@@ -52,8 +54,14 @@ class DataIngestionPipeline:
             MLflow tracker for logging experiments. If None, no logging will be performed.
         data_version : str
             เวอร์ชันข้อมูลที่ต้องการใช้ (เช่น 'v1.0', 'v1.1', 'latest')
-        gcs_path : Optional[str]
-            เส้นทาง GCS หากใช้ข้อมูลจาก Google Cloud Storage
+        storage_type : str
+            ประเภทการจัดเก็บข้อมูล ("local", "gcs", "hybrid")
+        gcs_bucket : Optional[str]
+            ชื่อ GCS bucket (เช่น 'my-data-bucket')
+        gcs_prefix : str
+            Prefix สำหรับข้อมูลใน GCS (เช่น 'data')
+        project_id : Optional[str]
+            Google Cloud Project ID
         """
         # ------------------------------------------------------------------
         # Configuration handling
@@ -64,48 +72,86 @@ class DataIngestionPipeline:
             cfg = AppConfig.from_files(model_config_path, environment_config_path)
         self.cfg = cfg
         self.mlflow_tracker = mlflow_tracker
-         
+
         self.embedding_model_name = cfg.embedding_model_name
         self.base_faiss_index_path = cfg.faiss_index_path
         self.data_folder = cfg.data_folder
         self.file_names = cfg.file_names
         self.openai_token = cfg.openai_token
-        
+
         # สร้าง DataVersionManager
         self.data_version = data_version
-        self.gcs_path = gcs_path
-        self.version_manager = DataVersionManager(
-            base_data_dir=os.path.dirname(self.data_folder),
-            base_index_dir=os.path.dirname(self.base_faiss_index_path),
-            data_version=data_version,
-            gcs_path=gcs_path
-        )
-        
+        self.storage_type = storage_type
+
+        if storage_type == "local":
+            self.version_manager = DataVersionManager(
+                base_data_dir=os.path.dirname(self.data_folder),
+                base_index_dir=os.path.dirname(self.base_faiss_index_path),
+                storage_type="local",
+                data_version=data_version,
+            )
+        elif storage_type == "gcs":
+            if not gcs_bucket or not project_id:
+                raise ValueError(
+                    "gcs_bucket and project_id are required for GCS storage"
+                )
+            self.version_manager = DataVersionManager(
+                storage_type="gcs",
+                gcs_bucket=gcs_bucket,
+                gcs_prefix=gcs_prefix,
+                project_id=project_id,
+                data_version=data_version,
+            )
+        else:  # hybrid
+            if not gcs_bucket or not project_id:
+                raise ValueError(
+                    "gcs_bucket and project_id are required for hybrid storage"
+                )
+            self.version_manager = DataVersionManager(
+                base_data_dir=os.path.dirname(self.data_folder),
+                base_index_dir=os.path.dirname(self.base_faiss_index_path),
+                storage_type="hybrid",
+                gcs_bucket=gcs_bucket,
+                gcs_prefix=gcs_prefix,
+                project_id=project_id,
+                data_version=data_version,
+            )
+
         # กำหนดเส้นทาง index ตามเวอร์ชันข้อมูล
         index_dir = self.version_manager.get_index_path_for_version(data_version)
-        self.faiss_index_path = str(index_dir / os.path.basename(self.base_faiss_index_path))
-        
-        # Ensure directories exist
-        os.makedirs(os.path.dirname(self.faiss_index_path), exist_ok=True)
-        os.makedirs(self.data_folder, exist_ok=True)
-        
+        if isinstance(index_dir, str):
+            # สำหรับ GCS storage
+            self.faiss_index_path = f"{index_dir}/faiss_product_index"
+        else:
+            # สำหรับ local storage
+            self.faiss_index_path = str(
+                index_dir / os.path.basename(self.base_faiss_index_path)
+            )
+
+        # Ensure directories exist (for local storage)
+        if storage_type in ["local", "hybrid"]:
+            os.makedirs(os.path.dirname(self.faiss_index_path), exist_ok=True)
+            os.makedirs(self.data_folder, exist_ok=True)
+
         # Initialize embedding model
         try:
-            self.embeddings = OpenAIEmbeddings(model=self.embedding_model_name, openai_api_key=self.openai_token)
+            self.embeddings = OpenAIEmbeddings(
+                model=self.embedding_model_name, api_key=SecretStr(self.openai_token)
+            )
             logger.info(f"Initialized embedding model: {self.embedding_model_name}")
         except Exception as e:
             logger.error(f"Failed to initialize embedding model: {e}")
             raise
-    
+
     def load_documents(self) -> List[Document]:
         """
         Load documents from the specified files using the current data version.
-        
+
         Returns
         -------
         List[Document]
             A list of loaded documents.
-            
+
         Raises
         ------
         FileNotFoundError
@@ -113,60 +159,82 @@ class DataIngestionPipeline:
         """
         documents: List[Document] = []
         loaded_files: List[str] = []
-        
+
         # ดึงเส้นทางไดเรกทอรีของเวอร์ชันข้อมูลที่ต้องการใช้
         version_dir = self.version_manager.get_data_version_path(self.data_version)
-        
+
         # ถ้าใช้ GCS และต้องการดาวน์โหลดข้อมูล
-        if self.gcs_path:
-            downloaded_files = self.version_manager.download_from_gcs(self.gcs_path, self.data_version)
+        if self.storage_type == "gcs":
+            downloaded_files = self.version_manager.download_from_gcs(self.data_version)
             if downloaded_files:
                 # ใช้ไฟล์ที่ดาวน์โหลดมาแทน
                 for file_path in downloaded_files:
                     try:
                         with open(file_path, "r", encoding="utf-8") as f:
                             content = f.read()
-                            
-                        doc = Document(page_content=content, metadata={"source": file_path})
+
+                        doc = Document(
+                            page_content=content, metadata={"source": file_path}
+                        )
                         documents.append(doc)
                         loaded_files.append(file_path)
-                        logger.info(f"Loaded document from {file_path} (downloaded from GCS)")
+                        logger.info(
+                            f"Loaded document from {file_path} (downloaded from GCS)"
+                        )
                     except Exception as e:
                         logger.error(f"Error loading document {file_path}: {e}")
                         raise
         else:
             # ใช้ไฟล์ในเครื่อง
             for file_name in self.file_names:
-                file_path = os.path.join(version_dir, file_name)
+                if isinstance(version_dir, str):
+                    # สำหรับ GCS storage
+                    file_path = f"{version_dir}/{file_name}"
+                else:
+                    # สำหรับ local storage
+                    file_path = str(version_dir / file_name)
+
                 try:
                     if not os.path.exists(file_path):
-                        logger.warning(f"File not found in version {self.data_version}: {file_path}")
+                        logger.warning(
+                            f"File not found in version {self.data_version}: {file_path}"
+                        )
                         continue
-                        
+
                     with open(file_path, "r", encoding="utf-8") as f:
                         content = f.read()
-                        
+
                     doc = Document(page_content=content, metadata={"source": file_path})
                     documents.append(doc)
                     loaded_files.append(file_path)
-                    logger.info(f"Loaded document from {file_path} (version {self.data_version})")
+                    logger.info(
+                        f"Loaded document from {file_path} (version {self.data_version})"
+                    )
                 except Exception as e:
                     logger.error(f"Error loading document {file_path}: {e}")
                     raise
-        
+
         if not documents:
             logger.warning(f"No documents were loaded for version {self.data_version}")
-        
+
         # เก็บรายการไฟล์ที่โหลดไว้สำหรับสร้าง lineage
         self.loaded_files = loaded_files
-            
+
         return documents
-    
-    def chunk_documents(self, documents: List[Document], chunk_size: int = 1000, chunk_overlap: int = 200, 
-                       use_semantic_chunking: bool = True, breakpoint_threshold_type: str = "percentile") -> List[Document]:
+
+    def chunk_documents(
+        self,
+        documents: List[Document],
+        chunk_size: int = 1000,
+        chunk_overlap: int = 200,
+        use_semantic_chunking: bool = True,
+        breakpoint_threshold_type: Literal[
+            "percentile", "standard_deviation", "interquartile", "gradient"
+        ] = "percentile",
+    ) -> List[Document]:
         """
         Split documents into smaller chunks for processing.
-        
+
         Parameters
         ----------
         documents : List[Document]
@@ -177,22 +245,21 @@ class DataIngestionPipeline:
             The overlap between chunks in characters (used only with RecursiveCharacterTextSplitter).
         use_semantic_chunking : bool
             Whether to use semantic chunking instead of character-based chunking.
-        breakpoint_threshold_type : str
-            The threshold type for semantic chunking. Options include "percentile", 
-            "standard_deviation", "interquartile", "gradient".
-            
+        breakpoint_threshold_type : Literal["percentile", "standard_deviation", "interquartile", "gradient"]
+            The threshold type for semantic chunking.
+
         Returns
         -------
         List[Document]
             A list of document chunks.
         """
         start_time = time.time()
-        
+
         try:
             if use_semantic_chunking:
                 text_splitter = SemanticChunker(
                     embeddings=self.embeddings,
-                    breakpoint_threshold_type=breakpoint_threshold_type
+                    breakpoint_threshold_type=breakpoint_threshold_type,
                 )
             else:
                 text_splitter = RecursiveCharacterTextSplitter(
@@ -201,28 +268,39 @@ class DataIngestionPipeline:
                     length_function=len,
                     is_separator_regex=False,
                 )
-            
+
             chunks = text_splitter.split_documents(documents)
-            
+
             logger.info(f"Split {len(documents)} documents into {len(chunks)} chunks")
-            logger.debug(f"Chunking completed in {time.time() - start_time:.2f} seconds") 
+            logger.debug(
+                f"Chunking completed in {time.time() - start_time:.2f} seconds"
+            )
             for i, chunk in enumerate(chunks):
                 # สำหรับ RecursiveCharacterTextSplitter, len(chunk.page_content) จะให้จำนวนตัวอักษร
-                print(f"Chunk {i+1} length (characters): {len(chunk.page_content)}")
+                print(f"Chunk {i + 1} length (characters): {len(chunk.page_content)}")
 
                 # หากต้องการนับเป็น tokens (ซึ่ง LLM สนใจมากกว่า)
                 # คุณจะต้องใช้ tokenizer ของโมเดลนั้นๆ
                 # ตัวอย่างสำหรับ OpenAI (ต้องติดตั้ง tiktoken: pip install tiktoken)
                 import tiktoken
-                tokenizer = tiktoken.encoding_for_model(self.embedding_model_name) # หรือ gpt-3.5-turbo, gpt-4o
+
+                tokenizer = tiktoken.encoding_for_model(
+                    self.embedding_model_name
+                )  # หรือ gpt-3.5-turbo, gpt-4o
                 num_tokens = len(tokenizer.encode(chunk.page_content))
-                print(f"Chunk {i+1} length (tokens): {num_tokens}")
+                print(f"Chunk {i + 1} length (tokens): {num_tokens}")
 
             # สถิติโดยรวม
-            average_chunk_length_chars = sum(len(c.page_content) for c in chunks) / len(chunks)
-            print(f"Average chunk length (characters): {average_chunk_length_chars:.2f}")
- 
-            average_chunk_length_tokens = sum(len(tokenizer.encode(c.page_content)) for c in chunks) / len(chunks)
+            average_chunk_length_chars = sum(len(c.page_content) for c in chunks) / len(
+                chunks
+            )
+            print(
+                f"Average chunk length (characters): {average_chunk_length_chars:.2f}"
+            )
+
+            average_chunk_length_tokens = sum(
+                len(tokenizer.encode(c.page_content)) for c in chunks
+            ) / len(chunks)
             print(f"Average chunk length (tokens): {average_chunk_length_tokens:.2f}")
 
             logger.info(f"Split {len(documents)} documents into {len(chunks)} chunks")
@@ -230,48 +308,54 @@ class DataIngestionPipeline:
         except Exception as e:
             logger.error(f"Error chunking documents: {e}")
             raise
-    
+
     def create_and_save_vectorstore(self, chunks: List[Document]) -> None:
         """
         Create embeddings for document chunks and build a FAISS index using LangChain's FAISS implementation.
         If an index already exists at the specified path, it will be loaded instead of creating a new one.
-        
+
         Parameters
         ----------
         chunks : List[Document]
             The document chunks to embed.
-            
+
         Returns
         -------
         Tuple[List[str], FAISS]
             A tuple containing the document contents and the FAISS vectorstore.
-            
+
         Raises
         ------
         RuntimeError
             If embedding creation fails.
         """
         start_time = time.time()
-        
+
         try:
             faiss_index_dir = self.faiss_index_path
 
             # This method's responsibility is to create and save the index.
             # It will overwrite any existing index at the location.
             logger.info("Creating new FAISS index from provided chunks...")
-            vectorstore = FAISS.from_documents(documents=chunks, embedding=self.embeddings)
+            vectorstore = FAISS.from_documents(
+                documents=chunks, embedding=self.embeddings
+            )
 
             # Save the vectorstore locally to the correct directory
             vectorstore.save_local(faiss_index_dir)
 
-            logger.info(f"Successfully created and saved new FAISS index with {len(chunks)} vectors to {faiss_index_dir}")
-            logger.debug(f"Embedding and indexing completed in {time.time() - start_time:.2f} seconds")
+            logger.info(
+                f"Successfully created and saved new FAISS index with {len(chunks)} vectors to {faiss_index_dir}"
+            )
+            logger.debug(
+                f"Embedding and indexing completed in {time.time() - start_time:.2f} seconds"
+            )
 
             return
         except Exception as e:
             logger.error(f"Error creating embeddings or index: {e}")
             raise RuntimeError(f"Failed to create embeddings or index: {e}")
-    
+
     def run(self, chunking_params: Dict[str, Any]) -> None:
         """
         Run the complete data ingestion pipeline: load, chunk, create index, and save.
@@ -295,19 +379,23 @@ class DataIngestionPipeline:
                 index_path=self.faiss_index_path,
                 data_version=self.data_version,
                 files_used=getattr(self, "loaded_files", []),
-                parameters=chunking_params
+                parameters=chunking_params,
             )
             logger.info("Created lineage record.")
 
             if self.mlflow_tracker:
                 self.mlflow_tracker.log_params(chunking_params)
-                self.mlflow_tracker.log_metrics({
-                    "num_documents": len(documents),
-                    "num_chunks": len(chunks),
-                    "ingest_time_sec": time.time() - start_time,
-                })
+                self.mlflow_tracker.log_metrics(
+                    {
+                        "num_documents": len(documents),
+                        "num_chunks": len(chunks),
+                        "ingest_time_sec": time.time() - start_time,
+                    }
+                )
                 self.mlflow_tracker.log_artifact(self.faiss_index_path)
-                lineage_file = os.path.join(os.path.dirname(self.faiss_index_path), "lineage.json")
+                lineage_file = os.path.join(
+                    os.path.dirname(self.faiss_index_path), "lineage.json"
+                )
                 if os.path.exists(lineage_file):
                     self.mlflow_tracker.log_artifact(lineage_file)
                 logger.info("Logged artifacts and metrics to MLflow.")
