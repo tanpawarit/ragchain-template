@@ -1,3 +1,8 @@
+import os
+
+from src.utils.logger import get_logger
+from src.utils.pipeline.data_version_manager import DataVersionManager
+
 """
 ตัวอย่างการใช้งาน DataVersionManager กับ GCS สำหรับ Production
 
@@ -7,11 +12,6 @@
 3. Service Account หรือ Application Default Credentials
 4. google-cloud-storage package
 """
-
-import os
-
-from src.utils.logger import get_logger
-from src.utils.pipeline.data_version_manager import DataVersionManager
 
 logger = get_logger(__name__)
 

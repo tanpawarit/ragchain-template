@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-"""
-Script for creating a new data version using DataVersionManager
-"""
 
 import argparse
 import os
@@ -14,6 +11,10 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from src.utils.logger import get_logger
 from src.utils.pipeline.data_version_manager import DataVersionManager
+
+"""
+Script for creating a new data version using DataVersionManager
+"""
 
 logger = get_logger(__name__)
 

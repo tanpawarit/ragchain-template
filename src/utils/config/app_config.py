@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import List, Optional
+
+from src.prompts.prompt_manager import PromptManager
+from src.utils.config.manager import get_config
+
 """Centralised application configuration model.
 
 Loads YAML config files once and exposes strongly-typed attributes for the
@@ -12,12 +18,6 @@ Usage
 >>> cfg = AppConfig.from_files("configs/model_config.yaml", "config.yaml")
 >>> cfg.embedding_model_name  # => "text-embedding-3-small"
 """
-
-from dataclasses import dataclass
-from typing import List, Optional
-
-from src.utils.config.manager import get_config
-from src.prompts.prompt_manager import PromptManager
 
 
 @dataclass(slots=True)
@@ -40,7 +40,9 @@ class AppConfig:
     # Construction helpers
     # ---------------------------------------------------------------------
     @classmethod
-    def from_files(cls, model_config_path: str, environment_config_path: str) -> AppConfig:
+    def from_files(
+        cls, model_config_path: str, environment_config_path: str
+    ) -> AppConfig:
         """Create :class:`AppConfig` from two YAML files.
 
         Parameters
@@ -52,16 +54,16 @@ class AppConfig:
         """
         model_cfg = get_config(model_config_path)
         env_cfg = get_config(environment_config_path)
-        
+
         # Get prompt template info from config
         prompt_template_name = ""
         prompt_template_version = None
         prompt_template = ""
-        
+
         if "prompt_config" in model_cfg:
             prompt_template_name = model_cfg["prompt_config"].get("template_name", "")
             prompt_template_version = model_cfg["prompt_config"].get("version")
-            
+
             # Load the prompt template if name is provided
             if prompt_template_name:
                 try:

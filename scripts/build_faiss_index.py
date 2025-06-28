@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-"""
-Script for building FAISS index from the latest data version or a specified version
-"""
 
 import argparse
 import os
@@ -14,6 +11,10 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from src.components.ingestion import DataIngestionPipeline
 from src.utils.logger import get_logger
+
+"""
+Script for building FAISS index from the latest data version or a specified version
+"""
 
 logger = get_logger(__name__)
 
