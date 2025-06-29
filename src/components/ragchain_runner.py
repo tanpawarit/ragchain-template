@@ -7,6 +7,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 from langchain_openai import ChatOpenAI
+from pydantic import SecretStr
 
 from src.utils.config.app_config import AppConfig
 from src.utils.logger import get_logger
@@ -54,9 +55,8 @@ class RAGChainRunner:
         # ------------------------------------------------------------------
         self.llm = ChatOpenAI(
             model=cfg.llm_model_name,  # Using the model specified in model_config.yaml
-            openai_api_key=cfg.openai_token,
+            api_key=SecretStr(cfg.openai_token),
             temperature=0,
-            max_tokens=1024,
         )
         prompt = ChatPromptTemplate.from_template(cfg.prompt_template)
 
@@ -128,7 +128,7 @@ class RAGChainRunner:
                     max_results=1,
                 )
                 config_logged_today = len(runs) > 0
-            except:
+            except Exception:
                 config_logged_today = False
 
             # Log config data only for the first run of the day

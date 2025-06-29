@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -152,13 +152,13 @@ def calculate_confidence_intervals(
     import scipy.stats as stats
 
     if not metrics:
-        return (0.0, 0.0)
+        return (float(0.0), float(0.0))
 
     mean = np.mean(metrics)
     std_err = stats.sem(metrics)
 
     if np.isnan(std_err):
-        return (mean, mean)
+        return (float(mean), float(mean))
 
     # Calculate confidence interval
     h = std_err * stats.t.ppf((1 + confidence_level) / 2, len(metrics) - 1)
@@ -180,7 +180,7 @@ class CostTracker:
 
     def __init__(self):
         self.total_cost: float = 0.0
-        self.model_usage: Dict[str, Dict[str, int]] = {}
+        self.model_usage: Dict[str, Dict[str, Union[int, float]]] = {}
 
     def track_completion(
         self, model: str, prompt_tokens: int, completion_tokens: int
