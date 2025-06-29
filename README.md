@@ -56,11 +56,10 @@ ragchain-chatbot/
 ## 🛠️ Tech Stack
 
 - **Language**: Python 3.12+
-- **LLM**: OpenAI GPT models
-- **Vector Store**: FAISS
-- **Embeddings**: OpenAI text-embedding-3-small
+- **LLM and Embedding**: OpenAI GPT models
+- **Vector Store**: FAISS 
 - **Evaluation**: DeepEval framework
-- **Experiment Tracking**: MLflow
+- **Model Tracking**: MLflow
 - **Storage**: Local filesystem + Google Cloud Storage
 - **Package Manager**: uv
 
@@ -78,3 +77,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 🐛 [Issue Tracker](https://github.com/your-org/ragchain-chatbot/issues)
 - 💬 [Discussions](https://github.com/your-org/ragchain-chatbot/discussions)
 - 🔧 [Troubleshooting](docs/development/troubleshooting.md)
+
+"This Project Built on my meticulously designed architecture and Design System, with code accelerated through Cursor.sh and Claude."
