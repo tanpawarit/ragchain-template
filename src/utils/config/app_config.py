@@ -5,6 +5,9 @@ from typing import List, Optional
 
 from src.prompts.prompt_manager import PromptManager
 from src.utils.config.manager import get_config
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 """Centralised application configuration model.
 
@@ -72,7 +75,7 @@ class AppConfig:
                         prompt_template_name, prompt_template_version
                     )
                 except Exception as e:
-                    print(f"Error loading prompt template: {e}")
+                    logger.error(f"Error loading prompt template: {e}")
         else:
             # Fallback to legacy template format
             prompt_template = model_cfg.get("template", "")

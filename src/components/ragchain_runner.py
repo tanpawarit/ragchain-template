@@ -87,16 +87,16 @@ class RAGChainRunner:
 
         start_time = time.time()
 
-        # ดึงเอกสารที่เกี่ยวข้อง (สำหรับการบันทึก)
+        # Retrieve relevant documents (for logging)
         retrieved_docs = self.retriever.get_relevant_documents(question)
 
-        # สร้างคำตอบ
+        # Generate answer
         reply: str = self.chain.invoke(question)
 
-        # คำนวณเวลาที่ใช้
+        # Calculate latency
         latency = time.time() - start_time
 
-        # บันทึกข้อมูลใน MLflow
+        # Log data to MLflow
         if self.tracker:
             # Only log essential data - save storage space
             params = {

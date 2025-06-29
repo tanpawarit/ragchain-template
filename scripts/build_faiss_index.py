@@ -139,11 +139,11 @@ if __name__ == "__main__":
     main()
 
 # ===== Examples =====
-# สร้าง FAISS index (local storage)
+# Build FAISS index (local storage)
 # python scripts/build_faiss_index.py --data-version latest --use-semantic-chunking
 
-# สร้าง FAISS index (GCS storage)
+# Build FAISS index (GCS storage)
 # python scripts/build_faiss_index.py --data-version latest --use-semantic-chunking --storage-type gcs --gcs-bucket my-bucket --project-id my-project
 
-# สร้าง FAISS index (hybrid storage)
+# Build FAISS index (hybrid storage)
 # python scripts/build_faiss_index.py --data-version latest --use-semantic-chunking --storage-type hybrid --gcs-bucket my-bucket --project-id my-project

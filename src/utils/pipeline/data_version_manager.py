@@ -1,6 +1,6 @@
 """
-Data Version Manager สำหรับจัดการเวอร์ชันข้อมูล, index และ data lineage
-รองรับทั้ง Local Storage และ Google Cloud Storage (GCS)
+Data Version Manager for managing data versions, indexes, and data lineage.
+Supports both Local Storage and Google Cloud Storage (GCS).
 """
 
 import hashlib
@@ -18,13 +18,13 @@ logger = get_logger(__name__)
 
 class DataVersionManager:
     """
-    จัดการเวอร์ชันข้อมูล, index และ data lineage
+    Manages data versions, indexes, and data lineage.
 
-    คลาสนี้ช่วยในการ:
-    1. จัดการเวอร์ชันข้อมูลดิบ (.txt) ในโฟลเดอร์ data/raw/v{version}/
-    2. เชื่อมโยง FAISS index กับเวอร์ชันข้อมูลที่ใช้สร้าง
-    3. บันทึกข้อมูล lineage เพื่อติดตามว่า index ถูกสร้างจากข้อมูลเวอร์ชันใด
-    4. รองรับการเก็บข้อมูลทั้งใน Local Storage และ Google Cloud Storage
+    This class assists with:
+    1. Managing raw data versions (.txt) in the `data/raw/v{version}/` folder.
+    2. Associating FAISS indexes with the data version used for their creation.
+    3. Recording lineage information to track which data version an index was built from.
+    4. Supporting data storage in both Local Storage and Google Cloud Storage.
     """
 
     def __init__(
@@ -38,24 +38,24 @@ class DataVersionManager:
         project_id: Optional[str] = None,
     ) -> None:
         """
-        สร้าง DataVersionManager
+        Initializes the DataVersionManager.
 
         Parameters
         ----------
         base_data_dir : Optional[str]
-            ไดเรกทอรีหลักสำหรับข้อมูล (เช่น 'data/') - ใช้เฉพาะเมื่อ storage_type เป็น "local" หรือ "hybrid"
+            The base directory for data (e.g., 'data/') - used only when `storage_type` is "local" or "hybrid".
         base_index_dir : Optional[str]
-            ไดเรกทอรีหลักสำหรับ index (เช่น 'artifacts/') - ใช้เฉพาะเมื่อ storage_type เป็น "local" หรือ "hybrid"
+            The base directory for indexes (e.g., 'artifacts/') - used only when `storage_type` is "local" or "hybrid".
         data_version : str
-            เวอร์ชันข้อมูลที่ต้องการใช้ (เช่น 'v1.0', 'v1.1', 'latest')
+            The data version to use (e.g., 'v1.0', 'v1.1', 'latest').
         gcs_bucket : Optional[str]
-            ชื่อ GCS bucket (เช่น 'my-data-bucket')
+            The GCS bucket name (e.g., 'my-data-bucket').
         gcs_prefix : str
-            Prefix สำหรับข้อมูลใน GCS (เช่น 'data')
+            The prefix for data in GCS (e.g., 'data').
         storage_type : str
-            ประเภทการจัดเก็บข้อมูล ("local", "gcs", "hybrid")
+            The type of data storage to use ("local", "gcs", "hybrid").
         project_id : Optional[str]
-            Google Cloud Project ID
+            Google Cloud Project ID.
         """
         self.storage_type = storage_type
         self.data_version = data_version
@@ -63,11 +63,11 @@ class DataVersionManager:
         self.gcs_prefix = gcs_prefix
         self.project_id = project_id
 
-        # ตรวจสอบ storage type
+        # Validate storage type
         if storage_type not in ["local", "gcs", "hybrid"]:
             raise ValueError("storage_type must be 'local', 'gcs', or 'hybrid'")
 
-        # สำหรับ local storage
+        # For local storage
         if storage_type in ["local", "hybrid"]:
             if not base_data_dir or not base_index_dir:
                 raise ValueError(
@@ -77,35 +77,37 @@ class DataVersionManager:
             self.base_data_dir = Path(base_data_dir)
             self.base_index_dir = Path(base_index_dir)
 
-            # สร้างไดเรกทอรีหลักหากยังไม่มี
+            # Create base directories if they don't exist
             self.base_data_dir.mkdir(parents=True, exist_ok=True)
             self.base_index_dir.mkdir(parents=True, exist_ok=True)
 
-            # สร้างไดเรกทอรี raw/ หากยังไม่มี
+            # Create raw/ directory if it doesn't exist
             self.raw_dir = self.base_data_dir / "raw"
             self.raw_dir.mkdir(exist_ok=True)
 
-            # ตรวจสอบและสร้างไดเรกทอรีเวอร์ชัน
+            # Check and create version directories
             self._initialize_version_directories()
 
-        # สำหรับ GCS storage
+        # For GCS storage
         if storage_type in ["gcs", "hybrid"]:
             if not gcs_bucket:
                 raise ValueError("gcs_bucket is required for GCS storage")
 
-            # ตรวจสอบ GCS credentials
+            # Validate GCS credentials
             self._validate_gcs_setup()
 
     def _validate_gcs_setup(self) -> None:
-        """ตรวจสอบการตั้งค่า GCS"""
+        """
+        Validates the GCS setup.
+        """
         try:
             from google.auth.exceptions import DefaultCredentialsError
             from google.cloud import storage  # type: ignore
 
-            # ตรวจสอบ credentials
+            # Check credentials
             try:
                 client = storage.Client(project=self.project_id)
-                # ทดสอบการเข้าถึง bucket
+                # Test bucket access
                 bucket = client.bucket(self.gcs_bucket)
                 if not bucket.exists():
                     logger.warning(f"GCS bucket '{self.gcs_bucket}' does not exist")
@@ -128,34 +130,34 @@ class DataVersionManager:
 
     def _create_symlink(self, target: str, link_path: str) -> bool:
         """
-        สร้าง symlink พร้อม error handling
+        Creates a symlink with error handling.
 
         Parameters
         ----------
         target : str
-            เป้าหมายของ symlink
+            The target of the symlink.
         link_path : str
-            เส้นทางของ symlink ที่จะสร้าง
+            The path where the symlink will be created.
 
         Returns
         -------
         bool
-            True ถ้าสร้างสำเร็จ, False ถ้าไม่สำเร็จ
+            True if successfully created, False otherwise.
         """
         try:
-            # ลบ symlink เดิมหากมี
+            # Remove existing symlink if it exists
             if os.path.exists(link_path):
                 if os.path.islink(link_path):
                     os.unlink(link_path)
                 else:
                     os.remove(link_path)
 
-            # สร้าง symlink ใหม่
+            # Create new symlink
             os.symlink(target, link_path, target_is_directory=True)
             return True
         except OSError as e:
             logger.warning(f"Could not create symlink {link_path} -> {target}: {e}")
-            # บน Windows หรือระบบที่ไม่รองรับ symlink ให้คัดลอกแทน
+            # On Windows or systems that don't support symlinks, copy instead
             try:
                 if os.path.isdir(target):
                     shutil.copytree(target, link_path, dirs_exist_ok=True)
@@ -177,16 +179,18 @@ class DataVersionManager:
             return False
 
     def _initialize_version_directories(self) -> None:
-        """สร้างไดเรกทอรีเวอร์ชันหากยังไม่มี และตรวจสอบเวอร์ชัน 'latest'"""
-        # ตรวจสอบว่ามีไดเรกทอรีเวอร์ชันหรือไม่
+        """
+        Initializes version directories if they don't exist and ensures 'latest' symlink is set.
+        """
+        # Check if any version directories exist
         version_dirs = [
             d for d in self.raw_dir.iterdir() if d.is_dir() and d.name.startswith("v")
         ]
 
-        # ถ้าไม่มีไดเรกทอรีเวอร์ชัน ให้สร้าง v1.0
+        # If no version directories exist, create v1.0
         if not version_dirs:
             (self.raw_dir / "v1.0").mkdir(exist_ok=True)
-            # สร้าง symlink สำหรับ latest
+            # Create symlink for latest
             latest_link = self.raw_dir / "latest"
             if self._create_symlink("v1.0", str(latest_link)):
                 logger.info(
@@ -195,10 +199,10 @@ class DataVersionManager:
             else:
                 logger.error("Failed to create 'latest' symlink")
 
-        # ถ้าไม่มี symlink latest ให้สร้างและชี้ไปที่เวอร์ชันล่าสุด
+        # If 'latest' symlink doesn't exist, create it and point to the latest version
         latest_link = self.raw_dir / "latest"
         if not latest_link.exists():
-            # เรียงเวอร์ชันและเลือกเวอร์ชันล่าสุด
+            # Sort versions and select the latest one
             version_dirs = [
                 d
                 for d in self.raw_dir.iterdir()
@@ -218,25 +222,25 @@ class DataVersionManager:
 
     def get_data_version_path(self, version: Optional[str] = None) -> Union[Path, str]:
         """
-        รับเส้นทางไดเรกทอรีสำหรับเวอร์ชันข้อมูลที่ระบุ
+        Retrieves the directory path for the specified data version.
 
         Parameters
         ----------
         version : Optional[str]
-            เวอร์ชันที่ต้องการ (ถ้าไม่ระบุจะใช้เวอร์ชันที่ตั้งไว้ตอนสร้างอ็อบเจกต์)
+            The desired version (if None, uses the version set during object creation).
 
         Returns
         -------
         Union[Path, str]
-            เส้นทางไดเรกทอรีของเวอร์ชันข้อมูล
+            The directory path of the data version.
         """
         version = version or self.data_version
 
         if self.storage_type == "gcs":
-            # สำหรับ GCS
+            # For GCS
             return f"gs://{self.gcs_bucket}/{self.gcs_prefix}/raw/{version}"
         else:
-            # สำหรับ local storage
+            # For local storage
             version_dir = self.raw_dir / version
             if not version_dir.exists():
                 raise ValueError(f"Data version '{version}' does not exist")
@@ -246,52 +250,45 @@ class DataVersionManager:
         self, version: Optional[str] = None
     ) -> Union[Path, str]:
         """
-        รับเส้นทาง index สำหรับเวอร์ชันข้อมูลที่ระบุ
+        Retrieves the index path for the specified data version.
 
         Parameters
         ----------
         version : Optional[str]
-            เวอร์ชันข้อมูลที่ต้องการ (ถ้าไม่ระบุจะใช้เวอร์ชันที่ตั้งไว้ตอนสร้างอ็อบเจกต์)
+            The desired version (if None, uses the version set during object creation).
 
         Returns
         -------
         Union[Path, str]
-            เส้นทางไดเรกทอรีของ index สำหรับเวอร์ชันข้อมูลที่ระบุ
+            The index path for the data version.
+
+        Raises
+        ------
+        ValueError
+            If the index directory for the specified version does not exist.
         """
         version = version or self.data_version
 
         if self.storage_type == "gcs":
-            # สำหรับ GCS
-            return (
-                f"gs://{self.gcs_bucket}/{self.gcs_prefix}/index/faiss_index_{version}"
-            )
+            # For GCS
+            return f"gs://{self.gcs_bucket}/{self.gcs_prefix}/indexes/{version}"
         else:
-            # สำหรับ local storage
-            # ถ้าเป็น 'latest' ให้อ่านจาก symlink
-            if version == "latest":
-                latest_link = self.raw_dir / "latest"
-                if latest_link.exists():
-                    if latest_link.is_symlink():
-                        target = os.readlink(str(latest_link))
-                        version = os.path.basename(target)
-                    else:
-                        # ถ้าไม่ใช่ symlink ให้ใช้ชื่อไดเรกทอรี
-                        version = latest_link.name
-                else:
-                    raise ValueError("'latest' symlink does not exist")
-
-            index_dir = self.base_index_dir / f"faiss_index_{version}"
-            index_dir.mkdir(parents=True, exist_ok=True)
+            # For local storage
+            index_dir = self.base_index_dir / version
+            if not index_dir.exists():
+                raise ValueError(
+                    f"Index directory for version '{version}' does not exist."
+                )
             return index_dir
 
     def list_available_versions(self) -> List[str]:
         """
-        แสดงรายการเวอร์ชันข้อมูลที่มีอยู่
+        Lists all available data versions based on the storage type.
 
         Returns
         -------
         List[str]
-            รายการเวอร์ชันข้อมูลที่มีอยู่
+            A list of available data version strings.
         """
         if self.storage_type == "gcs":
             return self._list_gcs_versions()
@@ -299,31 +296,45 @@ class DataVersionManager:
             return self._list_local_versions()
 
     def _list_local_versions(self) -> List[str]:
-        """แสดงรายการเวอร์ชันข้อมูลใน local storage"""
-        version_dirs = [
+        """
+        Lists available data versions in local storage.
+
+        Returns
+        -------
+        List[str]
+            A list of local data version strings.
+        """
+        versions = [
             d.name
             for d in self.raw_dir.iterdir()
             if d.is_dir() and d.name.startswith("v")
         ]
-        version_dirs.sort(key=lambda x: [int(n) for n in x.replace("v", "").split(".")])
-        return version_dirs
+        versions.sort(key=lambda x: [int(n) for n in x.replace("v", "").split(".")])
+        return versions
 
     def _list_gcs_versions(self) -> List[str]:
-        """แสดงรายการเวอร์ชันข้อมูลใน GCS"""
+        """
+        Lists available data versions in GCS.
+
+        Returns
+        -------
+        List[str]
+            A list of GCS data version strings.
+        """
         try:
             from google.cloud import storage  # type: ignore
 
             client = storage.Client(project=self.project_id)
             bucket = client.bucket(self.gcs_bucket)
 
-            # หา prefix สำหรับ raw data
+            # Find prefix for raw data
             raw_prefix = f"{self.gcs_prefix}/raw/"
 
-            # หาเวอร์ชันทั้งหมด
+            # Find all versions
             versions = set()
             for blob in bucket.list_blobs(prefix=raw_prefix, delimiter="/"):
                 if blob.name.endswith("/"):
-                    # เอาเฉพาะชื่อเวอร์ชัน
+                    # Extract version name
                     version_name = blob.name.replace(raw_prefix, "").rstrip("/")
                     if version_name.startswith("v"):
                         versions.add(version_name)
@@ -342,80 +353,108 @@ class DataVersionManager:
         self, source_files: List[str], increment_type: str = "minor"
     ) -> str:
         """
-        สร้างเวอร์ชันข้อมูลใหม่โดยคัดลอกไฟล์จากแหล่งที่มา
+        Creates a new data version by copying specified source files.
 
         Parameters
         ----------
         source_files : List[str]
-            รายการเส้นทางไฟล์ต้นฉบับที่ต้องการคัดลอก
+            A list of file paths to be included in the new version.
         increment_type : str
-            ประเภทการเพิ่มเวอร์ชัน ("major" หรือ "minor")
+            Type of version increment ("major" for v2.0, "minor" for v1.1).
 
         Returns
         -------
         str
-            เวอร์ชันใหม่ที่สร้าง (เช่น "v1.1")
+            The newly created version string (e.g., 'v1.2').
+
+        Raises
+        ------
+        ValueError
+            If `increment_type` is invalid or if `source_files` is empty.
+        RuntimeError
+            If there's an error during version creation.
         """
-        # หาเวอร์ชันล่าสุด
-        versions = self.list_available_versions()
-        if not versions:
-            new_version = "v1.0"
+        if not source_files:
+            raise ValueError("Source files list cannot be empty.")
+
+        if increment_type not in ["major", "minor"]:
+            raise ValueError("increment_type must be 'major' or 'minor'")
+
+        # Determine the next version number
+        current_versions = self.list_available_versions()
+        if not current_versions:
+            # If no versions exist, start from v1.0
+            next_version = "v1.0"
         else:
-            latest = versions[-1]
-            major, minor = map(int, latest.replace("v", "").split("."))
+            latest_version = current_versions[-1]
+            major, minor = map(int, latest_version.replace("v", "").split("."))
 
             if increment_type == "major":
-                new_version = f"v{major + 1}.0"
+                next_version = f"v{major + 1}.0"
             else:  # minor
-                new_version = f"v{major}.{minor + 1}"
+                next_version = f"v{major}.{minor + 1}"
 
-        # สร้างเวอร์ชันใหม่ตาม storage type
+        logger.info(f"Creating new data version: {next_version}")
+
         if self.storage_type == "gcs":
-            self._create_gcs_version(new_version, source_files)
+            self._create_gcs_version(next_version, source_files)
         else:
-            self._create_local_version(new_version, source_files)
+            self._create_local_version(next_version, source_files)
 
-        logger.info(f"Created new data version {new_version}")
-        return new_version
+        return next_version
 
     def _create_local_version(self, new_version: str, source_files: List[str]) -> None:
-        """สร้างเวอร์ชันใหม่ใน local storage"""
-        # สร้างไดเรกทอรีเวอร์ชันใหม่
-        new_version_dir = self.raw_dir / new_version
-        new_version_dir.mkdir(exist_ok=True)
+        """
+        Creates a new data version in local storage.
 
-        # คัดลอกไฟล์
+        Parameters
+        ----------
+        new_version : str
+            The new version string (e.g., 'v1.2').
+        source_files : List[str]
+            A list of file paths to copy to the new version.
+        """
+        version_path = self.raw_dir / new_version
+        version_path.mkdir(exist_ok=True)
+
         for src_file in source_files:
-            src_path = Path(src_file)
-            if src_path.exists():
-                dest_file = new_version_dir / src_path.name
-                shutil.copy2(src_path, dest_file)
-                logger.info(f"Copied {src_file} to {dest_file}")
-            else:
-                logger.warning(f"Source file {src_file} does not exist")
+            dest_file = version_path / Path(src_file).name
+            shutil.copy2(src_file, dest_file)
+            logger.info(f"Copied {src_file} to {dest_file}")
 
-        # อัปเดต symlink latest
+        # Update 'latest' symlink to point to the new version
         latest_link = self.raw_dir / "latest"
-        if not self._create_symlink(new_version, str(latest_link)):
-            logger.error(f"Failed to update 'latest' symlink to point to {new_version}")
+        if self._create_symlink(new_version, str(latest_link)):
+            logger.info(f"Set 'latest' to point to {new_version}")
+        else:
+            logger.warning(f"Failed to update 'latest' symlink to {new_version}")
 
     def _create_gcs_version(self, new_version: str, source_files: List[str]) -> None:
-        """สร้างเวอร์ชันใหม่ใน GCS"""
+        """
+        Creates a new data version in GCS.
+
+        Parameters
+        ----------
+        new_version : str
+            The new version string (e.g., 'v1.2').
+        source_files : List[str]
+            A list of file paths to upload to the new version.
+        """
         try:
             from google.cloud import storage  # type: ignore
 
             client = storage.Client(project=self.project_id)
             bucket = client.bucket(self.gcs_bucket)
 
-            # อัปโหลดไฟล์
+            # Upload files
             for src_file in source_files:
                 src_path = Path(src_file)
                 if src_path.exists():
-                    # สร้าง blob name
+                    # Create blob name
                     blob_name = f"{self.gcs_prefix}/raw/{new_version}/{src_path.name}"
                     blob = bucket.blob(blob_name)
 
-                    # อัปโหลดไฟล์
+                    # Upload file
                     blob.upload_from_filename(str(src_path))
                     logger.info(
                         f"Uploaded {src_file} to gs://{self.gcs_bucket}/{blob_name}"
@@ -435,83 +474,71 @@ class DataVersionManager:
         parameters: Dict[str, Any],
     ) -> Dict[str, Any]:
         """
-        สร้างบันทึก lineage ที่เชื่อมโยง index กับข้อมูลต้นทาง
+        Creates a lineage record for an index, associating it with data version and parameters.
 
         Parameters
         ----------
         index_path : str
-            เส้นทางของ index ที่สร้าง
+            The path to the FAISS index.
         data_version : str
-            เวอร์ชันข้อมูลที่ใช้สร้าง index
+            The data version used to create the index.
         files_used : List[str]
-            รายการไฟล์ที่ใช้สร้าง index
+            A list of source files used to create the index.
         parameters : Dict[str, Any]
-            พารามิเตอร์ที่ใช้ในการสร้าง index
+            A dictionary of parameters used during the ingestion process (e.g., chunking parameters).
 
         Returns
         -------
         Dict[str, Any]
-            ข้อมูล lineage ที่สร้าง
+            The created lineage record.
         """
-        # สร้างข้อมูล file metadata
-        file_metadata = []
-        for file_path in files_used:
-            file_path_obj = Path(file_path)
-            if file_path_obj.exists():
-                with open(file_path_obj, "rb") as f:
-                    file_hash = hashlib.md5(f.read()).hexdigest()
+        lineage_id = hashlib.md5(
+            f"{index_path}-{data_version}-{json.dumps(files_used, sort_keys=True)}-{json.dumps(parameters, sort_keys=True)}".encode(
+                "utf-8"
+            )
+        ).hexdigest()
+        creation_time = datetime.now().isoformat()
 
-                file_info = {
-                    "file_name": file_path_obj.name,
-                    "file_path": str(file_path_obj),
-                    "md5_hash": file_hash,
-                    "size_bytes": file_path_obj.stat().st_size,
-                    "last_modified": datetime.fromtimestamp(
-                        file_path_obj.stat().st_mtime
-                    ).isoformat(),
-                }
-                file_metadata.append(file_info)
-
-        # สร้างบันทึก lineage
         lineage_record = {
+            "lineage_id": lineage_id,
             "index_path": index_path,
             "data_version": data_version,
-            "creation_time": datetime.now().isoformat(),
-            "files": file_metadata,
+            "files_used": files_used,
             "parameters": parameters,
-            "storage_type": self.storage_type,
-            "gcs_bucket": self.gcs_bucket,
-            "gcs_prefix": self.gcs_prefix,
+            "created_at": creation_time,
         }
 
-        # บันทึกไฟล์ lineage
         if self.storage_type == "gcs":
             self._save_gcs_lineage(lineage_record, index_path)
         else:
             self._save_local_lineage(lineage_record, index_path)
 
-        logger.info(f"Created lineage record for {index_path}")
         return lineage_record
 
     def _save_local_lineage(
         self, lineage_record: Dict[str, Any], index_path: str
     ) -> None:
-        """บันทึก lineage ใน local storage"""
+        """
+        Saves the lineage record to local storage.
+        """
         lineage_file = Path(index_path).parent / "lineage.json"
         with open(lineage_file, "w", encoding="utf-8") as f:
-            json.dump(lineage_record, f, indent=2, ensure_ascii=False)
+            json.dump(lineage_record, f, indent=4, ensure_ascii=False)
+        logger.info(f"Saved lineage record to {lineage_file}")
 
     def _save_gcs_lineage(
         self, lineage_record: Dict[str, Any], index_path: str
     ) -> None:
-        """บันทึก lineage ใน GCS"""
+        """
+        Saves the lineage record to GCS.
+        """
         try:
             from google.cloud import storage  # type: ignore
 
             client = storage.Client(project=self.project_id)
             bucket = client.bucket(self.gcs_bucket)
 
-            # สร้าง blob name สำหรับ lineage
+            # Create blob name for lineage
             index_path_str = str(index_path)
             if index_path_str.startswith(f"gs://{self.gcs_bucket}/"):
                 relative_path = index_path_str.replace(f"gs://{self.gcs_bucket}/", "")
@@ -521,10 +548,9 @@ class DataVersionManager:
             lineage_blob_name = f"{os.path.dirname(relative_path)}/lineage.json"
             blob = bucket.blob(lineage_blob_name)
 
-            # อัปโหลด lineage record
-            blob.upload_from_string(
-                json.dumps(lineage_record, indent=2, ensure_ascii=False),
-                content_type="application/json",
+            blob.upload_from_string(json.dumps(lineage_record, indent=4))
+            logger.info(
+                f"Saved lineage record to gs://{self.gcs_bucket}/{lineage_blob_name}"
             )
 
         except Exception as e:
@@ -533,17 +559,17 @@ class DataVersionManager:
 
     def get_lineage_for_index(self, index_path: str) -> Optional[Dict[str, Any]]:
         """
-        อ่านข้อมูล lineage สำหรับ index ที่ระบุ
+        Retrieves the lineage record for a given index path.
 
         Parameters
         ----------
         index_path : str
-            เส้นทางของ index
+            The path to the FAISS index.
 
         Returns
         -------
         Optional[Dict[str, Any]]
-            ข้อมูล lineage หรือ None ถ้าไม่พบ
+            The lineage record, or None if not found.
         """
         if self.storage_type == "gcs":
             return self._get_gcs_lineage(index_path)
@@ -551,7 +577,9 @@ class DataVersionManager:
             return self._get_local_lineage(index_path)
 
     def _get_local_lineage(self, index_path: str) -> Optional[Dict[str, Any]]:
-        """อ่าน lineage จาก local storage"""
+        """
+        Reads the lineage from local storage.
+        """
         lineage_file = Path(index_path).parent / "lineage.json"
         if lineage_file.exists():
             with open(lineage_file, "r", encoding="utf-8") as f:
@@ -559,14 +587,16 @@ class DataVersionManager:
         return None
 
     def _get_gcs_lineage(self, index_path: str) -> Optional[Dict[str, Any]]:
-        """อ่าน lineage จาก GCS"""
+        """
+        Reads the lineage from GCS.
+        """
         try:
             from google.cloud import storage  # type: ignore
 
             client = storage.Client(project=self.project_id)
             bucket = client.bucket(self.gcs_bucket)
 
-            # สร้าง blob name สำหรับ lineage
+            # Create blob name for lineage
             index_path_str = str(index_path)
             if index_path_str.startswith(f"gs://{self.gcs_bucket}/"):
                 relative_path = index_path_str.replace(f"gs://{self.gcs_bucket}/", "")
@@ -589,22 +619,25 @@ class DataVersionManager:
         self, data_version: str, local_dir: Optional[str] = None
     ) -> List[str]:
         """
-        ดาวน์โหลดข้อมูลจาก GCS ตามเวอร์ชันที่ระบุ
+        Downloads files for a specific data version from GCS to local storage.
 
         Parameters
         ----------
         data_version : str
-            เวอร์ชันข้อมูล เช่น 'v1.1'
+            The data version to download.
         local_dir : Optional[str]
-            ไดเรกทอรีปลายทาง (ถ้าไม่ระบุจะใช้ base_data_dir)
+            The local directory to save the downloaded files. If None, a temporary directory or the raw data directory will be used.
 
         Returns
         -------
         List[str]
-            รายการเส้นทางไฟล์ที่ดาวน์โหลด
+            A list of paths to the downloaded files.
         """
         if self.storage_type not in ["gcs", "hybrid"]:
-            raise ValueError("GCS download is only available for GCS or hybrid storage")
+            logger.warning(
+                "Downloading from GCS is only supported for 'gcs' or 'hybrid' storage types. Skipping."
+            )
+            return []
 
         try:
             from google.cloud import storage  # type: ignore
@@ -612,29 +645,31 @@ class DataVersionManager:
             client = storage.Client(project=self.project_id)
             bucket = client.bucket(self.gcs_bucket)
 
-            # สร้างไดเรกทอรีปลายทาง
+            # Create destination directory
             if local_dir:
                 target_dir = Path(local_dir)
             else:
-                # สำหรับ hybrid storage ใช้ local path
+                # For hybrid storage, use local path
                 if self.storage_type == "hybrid":
                     target_dir = self.raw_dir / data_version
                 else:
-                    # สำหรับ GCS-only storage สร้าง temporary directory
-                    target_dir = Path(f"/tmp/gcs_download_{data_version}")
+                    # For GCS-only storage, create a temporary directory
+                    import tempfile
+
+                    target_dir = Path(tempfile.mkdtemp(prefix="gcs_download_"))
 
             target_dir.mkdir(parents=True, exist_ok=True)
 
-            # หา prefix สำหรับเวอร์ชัน
+            # Find prefix for the version
             version_prefix = f"{self.gcs_prefix}/raw/{data_version}/"
 
-            # ดาวน์โหลดไฟล์
+            # Download files
             downloaded_files = []
             for blob in bucket.list_blobs(prefix=version_prefix):
-                # สร้างเส้นทางไฟล์ในเครื่อง
+                # Create local file path
                 local_path = target_dir / Path(blob.name).name
 
-                # ดาวน์โหลดไฟล์
+                # Download file
                 blob.download_to_filename(str(local_path))
                 downloaded_files.append(str(local_path))
                 logger.info(f"Downloaded {blob.name} to {local_path}")
@@ -647,19 +682,19 @@ class DataVersionManager:
 
     def upload_to_gcs(self, local_files: List[str], data_version: str) -> List[str]:
         """
-        อัปโหลดไฟล์จาก local storage ไปยัง GCS
+        Uploads files from local storage to GCS.
 
         Parameters
         ----------
         local_files : List[str]
-            รายการเส้นทางไฟล์ในเครื่อง
+            A list of local file paths to upload.
         data_version : str
-            เวอร์ชันข้อมูลที่ต้องการอัปโหลด
+            The data version to upload the files to.
 
         Returns
         -------
         List[str]
-            รายการ GCS paths ที่อัปโหลด
+            A list of GCS paths of the uploaded files.
         """
         if self.storage_type not in ["gcs", "hybrid"]:
             raise ValueError("GCS upload is only available for GCS or hybrid storage")
@@ -674,13 +709,13 @@ class DataVersionManager:
             for local_file in local_files:
                 local_path = Path(local_file)
                 if local_path.exists():
-                    # สร้าง blob name
+                    # Create blob name
                     blob_name = (
                         f"{self.gcs_prefix}/raw/{data_version}/{local_path.name}"
                     )
                     blob = bucket.blob(blob_name)
 
-                    # อัปโหลดไฟล์
+                    # Upload file
                     blob.upload_from_filename(str(local_path))
                     uploaded_files.append(f"gs://{self.gcs_bucket}/{blob_name}")
                     logger.info(

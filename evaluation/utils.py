@@ -5,12 +5,17 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
+import scipy.stats as stats
+
+from src.utils.logger import get_logger
 
 """
 Utility functions for evaluation modules.
 
 This module contains common utility functions used across different evaluation modules.
 """
+
+logger = get_logger(__name__)
 
 
 def save_evaluation_results(
@@ -149,8 +154,6 @@ def calculate_confidence_intervals(
     Tuple[float, float]
         Lower and upper bounds of the confidence interval
     """
-    import scipy.stats as stats
-
     if not metrics:
         return (float(0.0), float(0.0))
 
@@ -264,12 +267,12 @@ class CostTracker:
         """
         Print a summary of API usage and costs.
         """
-        print("\n=== API Usage Cost Summary ===")
-        print(f"Total Cost: ${self.total_cost:.4f} USD")
-        print("\nBreakdown by Model:")
+        logger.info("\n=== API Usage Cost Summary ===")
+        logger.info(f"Total Cost: ${self.total_cost:.4f} USD")
+        logger.info("\nBreakdown by Model:")
 
         for model, usage in self.model_usage.items():
-            print(f"\n{model}:")
-            print(f"  Prompt Tokens: {usage['prompt_tokens']}")
-            print(f"  Completion Tokens: {usage['completion_tokens']}")
-            print(f"  Cost: ${usage['cost']:.4f} USD")
+            logger.info(f"\n{model}:")
+            logger.info(f"  Prompt Tokens: {usage['prompt_tokens']}")
+            logger.info(f"  Completion Tokens: {usage['completion_tokens']}")
+            logger.info(f"  Cost: ${usage['cost']:.4f} USD")

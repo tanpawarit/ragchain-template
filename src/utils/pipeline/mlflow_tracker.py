@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-"""Thin wrapper around **MLflow** to keep call-sites minimal and testable."""
-
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 import mlflow
+
+"""Thin wrapper around **MLflow** to keep call-sites minimal and testable."""
 
 
 class MLflowTracker:

@@ -23,7 +23,7 @@ class DataIngestionPipeline:
     This class handles loading documents from files, chunking them into smaller pieces,
     generating embeddings, and creating a FAISS index for efficient retrieval.
 
-    รองรับ Data Versioning, Index Versioning และ Data Lineage ผ่าน DataVersionManager
+    It supports Data Versioning, Index Versioning, and Data Lineage via DataVersionManager.
     """
 
     def __init__(
@@ -53,13 +53,13 @@ class DataIngestionPipeline:
         mlflow_tracker : Optional[MLflowTracker]
             MLflow tracker for logging experiments. If None, no logging will be performed.
         data_version : str
-            เวอร์ชันข้อมูลที่ต้องการใช้ (เช่น 'v1.0', 'v1.1', 'latest')
+            The data version to use (e.g., 'v1.0', 'v1.1', 'latest')
         storage_type : str
-            ประเภทการจัดเก็บข้อมูล ("local", "gcs", "hybrid")
+            The type of storage to use ("local", "gcs", "hybrid")
         gcs_bucket : Optional[str]
-            ชื่อ GCS bucket (เช่น 'my-data-bucket')
+            GCS bucket name (e.g., 'my-data-bucket')
         gcs_prefix : str
-            Prefix สำหรับข้อมูลใน GCS (เช่น 'data')
+            Prefix for data in GCS (e.g., 'data')
         project_id : Optional[str]
             Google Cloud Project ID
         """
@@ -79,7 +79,7 @@ class DataIngestionPipeline:
         self.file_names = cfg.file_names
         self.openai_token = cfg.openai_token
 
-        # สร้าง DataVersionManager
+        # Create DataVersionManager
         self.data_version = data_version
         self.storage_type = storage_type
 
@@ -117,13 +117,13 @@ class DataIngestionPipeline:
                 data_version=data_version,
             )
 
-        # กำหนดเส้นทาง index ตามเวอร์ชันข้อมูล
+        # Set index path based on data version
         index_dir = self.version_manager.get_index_path_for_version(data_version)
         if isinstance(index_dir, str):
-            # สำหรับ GCS storage
+            # For GCS storage
             self.faiss_index_path = f"{index_dir}/faiss_product_index"
         else:
-            # สำหรับ local storage
+            # For local storage
             self.faiss_index_path = str(
                 index_dir / os.path.basename(self.base_faiss_index_path)
             )
@@ -160,14 +160,14 @@ class DataIngestionPipeline:
         documents: List[Document] = []
         loaded_files: List[str] = []
 
-        # ดึงเส้นทางไดเรกทอรีของเวอร์ชันข้อมูลที่ต้องการใช้
+        # Retrieve the directory path for the desired data version
         version_dir = self.version_manager.get_data_version_path(self.data_version)
 
-        # ถ้าใช้ GCS และต้องการดาวน์โหลดข้อมูล
+        # If using GCS and data needs to be downloaded
         if self.storage_type == "gcs":
             downloaded_files = self.version_manager.download_from_gcs(self.data_version)
             if downloaded_files:
-                # ใช้ไฟล์ที่ดาวน์โหลดมาแทน
+                # Use downloaded files
                 for file_path in downloaded_files:
                     try:
                         with open(file_path, "r", encoding="utf-8") as f:
@@ -185,13 +185,13 @@ class DataIngestionPipeline:
                         logger.error(f"Error loading document {file_path}: {e}")
                         raise
         else:
-            # ใช้ไฟล์ในเครื่อง
+            # Use local files
             for file_name in self.file_names:
                 if isinstance(version_dir, str):
-                    # สำหรับ GCS storage
+                    # For GCS storage
                     file_path = f"{version_dir}/{file_name}"
                 else:
-                    # สำหรับ local storage
+                    # For local storage
                     file_path = str(version_dir / file_name)
 
                 try:
@@ -217,7 +217,7 @@ class DataIngestionPipeline:
         if not documents:
             logger.warning(f"No documents were loaded for version {self.data_version}")
 
-        # เก็บรายการไฟล์ที่โหลดไว้สำหรับสร้าง lineage
+        # Store the list of loaded files for lineage creation
         self.loaded_files = loaded_files
 
         return documents
@@ -275,33 +275,34 @@ class DataIngestionPipeline:
             logger.debug(
                 f"Chunking completed in {time.time() - start_time:.2f} seconds"
             )
+
+            # Chunking statistics
+            import tiktoken
+
+            tokenizer = tiktoken.encoding_for_model(
+                self.embedding_model_name
+            )  # e.g., gpt-3.5-turbo, gpt-4o
+
+            total_chars = sum(len(c.page_content) for c in chunks)
+            total_tokens = sum(len(tokenizer.encode(c.page_content)) for c in chunks)
+
+            average_chunk_length_chars = total_chars / len(chunks)
+            average_chunk_length_tokens = total_tokens / len(chunks)
+
+            logger.info("Chunking statistics:")
+            logger.info(f"  Total chunks: {len(chunks)}")
+            logger.info(
+                f"  Average chunk length (characters): {average_chunk_length_chars:.2f}"
+            )
+            logger.info(
+                f"  Average chunk length (tokens): {average_chunk_length_tokens:.2f}"
+            )
+
+            # Log details of each chunk in debug mode only
             for i, chunk in enumerate(chunks):
-                # สำหรับ RecursiveCharacterTextSplitter, len(chunk.page_content) จะให้จำนวนตัวอักษร
-                print(f"Chunk {i + 1} length (characters): {len(chunk.page_content)}")
-
-                # หากต้องการนับเป็น tokens (ซึ่ง LLM สนใจมากกว่า)
-                # คุณจะต้องใช้ tokenizer ของโมเดลนั้นๆ
-                # ตัวอย่างสำหรับ OpenAI (ต้องติดตั้ง tiktoken: pip install tiktoken)
-                import tiktoken
-
-                tokenizer = tiktoken.encoding_for_model(
-                    self.embedding_model_name
-                )  # หรือ gpt-3.5-turbo, gpt-4o
-                num_tokens = len(tokenizer.encode(chunk.page_content))
-                print(f"Chunk {i + 1} length (tokens): {num_tokens}")
-
-            # สถิติโดยรวม
-            average_chunk_length_chars = sum(len(c.page_content) for c in chunks) / len(
-                chunks
-            )
-            print(
-                f"Average chunk length (characters): {average_chunk_length_chars:.2f}"
-            )
-
-            average_chunk_length_tokens = sum(
-                len(tokenizer.encode(c.page_content)) for c in chunks
-            ) / len(chunks)
-            print(f"Average chunk length (tokens): {average_chunk_length_tokens:.2f}")
+                char_count = len(chunk.page_content)
+                token_count = len(tokenizer.encode(chunk.page_content))
+                logger.debug(f"Chunk {i + 1}: {char_count} chars, {token_count} tokens")
 
             logger.info(f"Split {len(documents)} documents into {len(chunks)} chunks")
             return chunks
@@ -356,12 +357,15 @@ class DataIngestionPipeline:
             logger.error(f"Error creating embeddings or index: {e}")
             raise RuntimeError(f"Failed to create embeddings or index: {e}")
 
-    def run(self, chunking_params: Dict[str, Any]) -> None:
+    def run(self, chunking_params: Dict[str, Any]) -> Dict[str, Any]:
         """
         Run the complete data ingestion pipeline: load, chunk, create index, and save.
 
         Args:
             chunking_params: A dictionary of parameters for the chunking process.
+
+        Returns:
+            Dict[str, Any]: The lineage record containing metadata about the ingestion process.
         """
         start_time = time.time()
         logger.info("Starting data ingestion pipeline...")
@@ -375,34 +379,46 @@ class DataIngestionPipeline:
             self.create_and_save_vectorstore(chunks)
             logger.info(f"Created and saved vectorstore to {self.faiss_index_path}")
 
+            # Create and save lineage record
             lineage_record = self.version_manager.create_lineage_record(
                 index_path=self.faiss_index_path,
                 data_version=self.data_version,
-                files_used=getattr(self, "loaded_files", []),
+                files_used=self.loaded_files,
                 parameters=chunking_params,
             )
-            logger.info("Created lineage record.")
+            logger.info(f"Created lineage record: {lineage_record['lineage_id']}")
 
+            # Log data to MLflow (if available)
             if self.mlflow_tracker:
+                # Log parameters and metrics
                 self.mlflow_tracker.log_params(chunking_params)
                 self.mlflow_tracker.log_metrics(
                     {
-                        "num_documents": len(documents),
-                        "num_chunks": len(chunks),
+                        "num_documents": float(len(documents)),
+                        "num_chunks": float(len(chunks)),
                         "ingest_time_sec": time.time() - start_time,
                     }
                 )
+                # Log data_version as a parameter
+                self.mlflow_tracker.log_params({"data_version": self.data_version})
+
+                # Log artifacts
                 self.mlflow_tracker.log_artifact(self.faiss_index_path)
+
+                # Log lineage file if it exists
                 lineage_file = os.path.join(
                     os.path.dirname(self.faiss_index_path), "lineage.json"
                 )
                 if os.path.exists(lineage_file):
                     self.mlflow_tracker.log_artifact(lineage_file)
+
                 logger.info("Logged artifacts and metrics to MLflow.")
 
             logger.info(
                 f"Data ingestion pipeline completed in {time.time() - start_time:.2f} seconds for data version {self.data_version}"
             )
+
+            return lineage_record
 
         except Exception as e:
             logger.error(f"Error during data ingestion pipeline: {e}")
