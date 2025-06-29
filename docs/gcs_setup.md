@@ -237,7 +237,11 @@ gcloud compute regions describe YOUR_REGION
 
 ## ตัวอย่างการใช้งานจริง
 
-ดูไฟล์ `examples/production_gcs_setup.py` สำหรับตัวอย่างการใช้งานที่สมบูรณ์
+สำหรับตัวอย่างโค้ดที่สมบูรณ์และพร้อมใช้งานจริงสำหรับการตั้งค่าและจัดการ GCS ใน Production environment โปรดดูที่:
+
+**[examples/production_gcs_setup.py](../examples/production_gcs_setup.py)**
+
+ไฟล์นี้สาธิตวิธีการใช้ `DataVersionManager` และการตั้งค่าต่างๆ เพื่อให้ระบบ RAG สามารถทำงานร่วมกับ GCS ได้อย่างมีประสิทธิภาพในสภาพแวดล้อมจริง
 
 ## การอัปเกรดจาก Local Storage
 
