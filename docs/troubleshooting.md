@@ -1,31 +1,31 @@
-# การแก้ปัญหา
+# Troubleshooting Guide
 
-## ปัญหาที่พบบ่อย
+## Common Issues
 
 ### 1. API Key Error
 
-**อาการ**: `openai.AuthenticationError`
+**Symptoms**: `openai.AuthenticationError`
 
-**แก้ไข**:
+**Solution**:
 ```bash
-# ตรวจสอบ API key ใน config.yaml
+# Check API key in config.yaml
 cat config.yaml
 
-# ตรวจสอบ credits ใน OpenAI dashboard
+# Check credits in OpenAI dashboard
 # https://platform.openai.com/usage
 ```
 
 ### 2. Memory Error
 
-**อาการ**: `MemoryError` หรือ `OOM killed`
+**Symptoms**: `MemoryError` or `OOM killed`
 
-**แก้ไข**:
+**Solution**:
 ```yaml
-# ลด chunk_size ใน config
-chunk_size: 500  # จาก 1000
-chunk_overlap: 100  # จาก 200
+# Reduce chunk_size in config
+chunk_size: 500  # from 1000
+chunk_overlap: 100  # from 200
 
-# หรือใช้ model เล็กกว่า
+# Or use smaller models
 models:
   embedding: "text-embedding-3-small"
   llm: "gpt-3.5-turbo"
@@ -33,82 +33,82 @@ models:
 
 ### 3. Import Error
 
-**อาการ**: `ModuleNotFoundError`
+**Symptoms**: `ModuleNotFoundError`
 
-**แก้ไข**:
+**Solution**:
 ```bash
-# ติดตั้ง dependencies ใหม่
+# Reinstall dependencies
 uv sync
 
-# หรือใช้ pip
+# Or with pip
 pip install -r requirements.txt
 ```
 
 ### 4. FAISS Index Error
 
-**อาการ**: `RuntimeError: Error in faiss`
+**Symptoms**: `RuntimeError: Error in faiss`
 
-**แก้ไข**:
+**Solution**:
 ```bash
-# สร้าง index ใหม่
+# Rebuild index
 python scripts/build_faiss_index.py --data-version latest
 
-# ตรวจสอบว่าไฟล์ index มีอยู่
+# Check if index files exist
 ls -la artifacts/
 ```
 
 ### 5. Data Version Error
 
-**อาการ**: `FileNotFoundError: Data version not found`
+**Symptoms**: `FileNotFoundError: Data version not found`
 
-**แก้ไข**:
+**Solution**:
 ```bash
-# ตรวจสอบเวอร์ชันที่มี
+# Check available versions
 python -c "from src.utils.pipeline.data_version_manager import DataVersionManager; print(DataVersionManager().list_available_versions())"
 
-# สร้างเวอร์ชันใหม่
+# Create new version
 python scripts/create_data_version.py --files data/raw/*.txt --inc minor
 ```
 
 ### 6. MLflow Connection Error
 
-**อาการ**: `ConnectionError: MLflow tracking server`
+**Symptoms**: `ConnectionError: MLflow tracking server`
 
-**แก้ไข**:
+**Solution**:
 ```bash
-# เริ่ม MLflow server
+# Start MLflow server
 mlflow ui --port 5000 &
 
-# หรือใช้ local file store
-# แก้ไข config.yaml
+# Or use local file store
+# Edit config.yaml
 mlflow:
   tracking_uri: "file:./mlruns"
 ```
 
 ### 7. Thai Language Issues
 
-**อาการ**: ตัวอักษรไทยแสดงผิด
+**Symptoms**: Thai characters display incorrectly
 
-**แก้ไข**:
+**Solution**:
 ```python
-# ตั้งค่า encoding
+# Set encoding
 import locale
 locale.setlocale(locale.LC_ALL, 'th_TH.UTF-8')
 
-# ใช้ semantic chunking สำหรับภาษาไทย
+# Use semantic chunking for Thai text
 python scripts/build_faiss_index.py --use-semantic-chunking
 ```
 
-## การ Debug
+## Debugging
 
-### 1. เปิด Debug Mode
+### 1. Enable Debug Mode
 
 ```python
 import logging
 logging.basicConfig(level=logging.DEBUG)
 ```
 
-### 2. ตรวจสอบ Config
+### 2. Check Configuration
 
 ```python
 from src.utils.config.app_config import AppConfig
@@ -117,10 +117,10 @@ cfg = AppConfig.from_files("configs/model_config.yaml", "config.yaml")
 print(cfg)
 ```
 
-### 3. ทดสอบ Components แยก
+### 3. Test Components Separately
 
 ```python
-# ทดสอบ embedding
+# Test embedding
 from src.utils.config.app_config import AppConfig
 cfg = AppConfig.from_files("configs/model_config.yaml", "config.yaml")
 
@@ -129,7 +129,7 @@ embeddings = OpenAIEmbeddings(model=cfg.embedding_model_name)
 result = embeddings.embed_query("test")
 print(f"Embedding dimension: {len(result)}")
 
-# ทดสอบ LLM
+# Test LLM
 from langchain_openai import ChatOpenAI
 llm = ChatOpenAI(model=cfg.llm_model_name)
 result = llm.invoke("Hello")
@@ -140,38 +140,38 @@ print(result.content)
 
 ### 1. Slow Response
 
-**สาเหตุ**:
-- Index ใหญ่เกินไป
-- k_value สูงเกินไป
+**Causes**:
+- Index too large
+- k_value too high
 - Network latency
 
-**แก้ไข**:
+**Solutions**:
 ```yaml
-# ลด k_value
+# Reduce k_value
 retriever:
-  k_value: 3  # จาก 5
+  k_value: 3  # from 5
 
-# ใช้ model เร็วกว่า
+# Use faster models
 models:
-  llm: "gpt-3.5-turbo"  # แทน gpt-4
+  llm: "gpt-3.5-turbo"  # instead of gpt-4
 ```
 
 ### 2. High API Costs
 
-**แก้ไข**:
+**Solutions**:
 ```yaml
-# ใช้ model ถูกกว่า
+# Use cheaper models
 models:
   embedding: "text-embedding-3-small"
   llm: "gpt-3.5-turbo"
 
-# ลด chunk size
+# Reduce chunk size
 chunk_size: 800
 ```
 
-## การขอความช่วยเหลือ
+## Getting Help
 
-1. **ตรวจสอบ logs** - ดู error message ทั้งหมด
-2. **ลอง minimal example** - ทดสอบแค่ส่วนที่มีปัญหา
-3. **เช็ค version** - ตรวจสอบเวอร์ชัน dependencies
-4. **สร้าง issue** - ใน GitHub repository พร้อม error logs 
+1. **Check logs** - Review complete error messages
+2. **Try minimal examples** - Test only the problematic component
+3. **Check versions** - Verify dependency versions
+4. **Create an issue** - In the GitHub repository with complete error logs 

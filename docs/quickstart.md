@@ -62,9 +62,9 @@ Bot: [AI-generated response based on your data]
 
 ## Next Steps
 
-- [Complete Configuration Guide](configuration.md) - Detailed configuration options
-- [Production Deployment](deployment/production.md) - Deploy to production
-- [Evaluation Framework](evaluation/overview.md) - Evaluate your RAG system
+- [GCS Setup](gcs_setup.md) - Production deployment with Google Cloud Storage
+- [System Evaluation](evaluation.md) - Evaluate your RAG system performance
+- [Prompt Management](prompts.md) - Customize prompt templates
 
 ## Troubleshooting
 
@@ -73,4 +73,4 @@ Bot: [AI-generated response based on your data]
 - **Memory Error**: Reduce chunk size or use a smaller model
 - **Import Error**: Run `uv sync` to install all dependencies
 
-For more help, see [Troubleshooting Guide](development/troubleshooting.md). 
+For more help, see [Troubleshooting Guide](troubleshooting.md). 

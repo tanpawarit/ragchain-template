@@ -48,10 +48,10 @@ ragchain-chatbot/
 
 ### Quick Links
 - **🚀 [Quick Start Guide](docs/quickstart.md)** - Get running in 5 minutes
-- **⚙️ [Configuration](docs/configuration.md)** - Setup and configuration
 - **☁️ [GCS Setup](docs/gcs_setup.md)** - Production storage setup
-- **📊 [Evaluation](docs/evaluation/overview.md)** - System evaluation framework
-- **🔧 [API Reference](docs/api/reference.md)** - Complete API docs
+- **📊 [System Evaluation](docs/evaluation.md)** - System evaluation framework
+- **🔧 [Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
+- **📝 [Prompt Management](docs/prompts.md)** - Prompt templates and versioning
 
 ## 🛠️ Tech Stack
 
@@ -62,20 +62,12 @@ ragchain-chatbot/
 - **Model Tracking**: MLflow
 - **Storage**: Local filesystem + Google Cloud Storage
 - **Package Manager**: uv
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](docs/development/contributing.md) for details.
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
+ 
 ## 🆘 Support
 
 - 📖 [Documentation](docs/README.md)
 - 🐛 [Issue Tracker](https://github.com/your-org/ragchain-chatbot/issues)
 - 💬 [Discussions](https://github.com/your-org/ragchain-chatbot/discussions)
-- 🔧 [Troubleshooting](docs/development/troubleshooting.md)
+- 🔧 [Troubleshooting](docs/troubleshooting.md)
 
 "This Project Built on my meticulously designed architecture and Design System, with code accelerated through Cursor.sh and Claude."

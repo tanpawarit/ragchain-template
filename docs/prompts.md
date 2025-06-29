@@ -1,135 +1,82 @@
-# การจัดการ Prompt
+# Prompt Versioning System
 
-## ภาพรวม
+This directory contains the prompt versioning system for the Typhoon project. It allows you to manage different versions of prompts and easily switch between them.
 
-ระบบ Prompt Management ช่วยจัดการเทมเพลต prompt แบบมีเวอร์ชัน
-
-## โครงสร้าง
+## Directory Structure
 
 ```
 src/prompts/
-├── prompt_manager.py          # ตัวจัดการ prompt
-└── templates/                 # เทมเพลต prompt
-    └── sales_support_v1.yaml  # ตัวอย่าง
+├── __init__.py           # Package exports
+├── prompt_manager.py     # Core prompt management functionality
+└── templates/            # Directory containing prompt template files
+    └── sales_support_v1.yaml  # Example prompt template
 ```
 
-## การใช้งาน
+## How It Works
 
-### 1. โหลด Prompt
+1. Prompt templates are stored as YAML files in the `templates/` directory
+2. Templates are versioned with a naming convention: `{template_name}_v{version}.yaml`
+3. The `PromptManager` class handles loading and versioning of prompts
+4. Configuration in `model_config.yaml` references which template to use
+
+## Usage
+
+### Configuration
+
+In `configs/model_config.yaml`, specify the prompt template to use:
+
+```yaml
+prompt_config:
+  template_name: "sales_support"  # Base name of the template
+  version: "v1"                   # Version to use (optional)
+```
+
+### Loading Prompts
 
 ```python
 from src.prompts import PromptManager
 
-pm = PromptManager()
+# Initialize the prompt manager
+prompt_manager = PromptManager()
 
-# โหลดเวอร์ชันล่าสุด
-template = pm.get_template("sales_support")
+# Get a specific template version
+template = prompt_manager.get_template("sales_support", "v1")
 
-# โหลดเวอร์ชันเฉพาะ
-template = pm.get_template("sales_support", "v1")
+# Get the latest version of a template
+template = prompt_manager.get_template("sales_support")
+
+# Format a template with variables
+formatted = prompt_manager.format_template("sales_support", "v1", 
+                                          context="Some context", 
+                                          question="User question")
 ```
 
-### 2. ใช้ Prompt
+### Creating New Template Versions
 
-```python
-# Format พร้อมตัวแปร
-result = pm.format_template(
-    "sales_support", "v1",
-    context="บริบทจากเอกสาร",
-    question="คำถามของผู้ใช้"
-)
-```
+1. Create a new YAML file in the `templates/` directory
+2. Name it according to the convention: `{template_name}_v{version}.yaml`
+3. Update `model_config.yaml` to reference the new version
 
-### 3. สร้าง Prompt ใหม่
-
-สร้างไฟล์ `sales_support_v2.yaml`:
+Example template file structure:
 
 ```yaml
 template: |
-  ### บทบาท ###
-  คุณเป็นผู้ช่วยขายที่เชี่ยวชาญ
+  ### ROLE ###
+  Your role description here
   
-  ### คำแนะนำ ###
-  - ตอบเป็นภาษาไทย
-  - ใช้ข้อมูลจากบริบท
-  - สุภาพและเป็นมิตร
+  ### INSTRUCTIONS ###
+  Your instructions here
   
-  ### บริบท ###
+  ### CONTEXT ###
   {context}
   
-  ### คำถาม ###
+  ### QUESTION ###
   {question}
-  
-  ### คำตอบ ###
-
-metadata:
-  description: "เทมเพลตสำหรับงานขาย"
-  author: "ชื่อผู้เขียน"
-  created_date: "2024-01-15"
-```
-
-### 4. ตั้งค่าใน Config
-
-แก้ไข `configs/model_config.yaml`:
-
-```yaml
-prompt_config:
-  template_name: "sales_support"
-  version: "v2"  # ใช้เวอร์ชันใหม่
 ```
 
 ## Best Practices
 
-1. **ตั้งชื่อเวอร์ชันชัดเจน** - v1, v2, v3
-2. **เก็บเวอร์ชันเก่า** - สำหรับ rollback
-3. **ทดสอบก่อนใช้** - ทำ A/B testing
-4. **เขียน metadata** - อธิบายการเปลี่ยนแปลง
-
-## ตัวอย่าง Template
-
-### แบบพื้นฐาน
-```yaml
-template: |
-  ตอบคำถามต่อไปนี้โดยใช้บริบทที่ให้มา
-  
-  บริบท: {context}
-  คำถาม: {question}
-  
-  คำตอบ:
-```
-
-### แบบภาษาไทย
-```yaml
-template: |
-  ### บทบาท ###
-  คุณเป็นผู้ช่วยที่เชี่ยวชาญ
-  
-  ### คำแนะนำ ###
-  - ตอบเป็นภาษาไทย
-  - ใช้ข้อมูลจากบริบท
-  - หากไม่ทราบ ให้บอกตรงๆ
-  
-  ### บริบท ###
-  {context}
-  
-  ### คำถาม ###
-  {question}
-  
-  ### คำตอบ ###
-```
-
-## การแก้ปัญหา
-
-**ไม่พบ Template**
-```python
-# ตรวจสอบว่ามี template หรือไม่
-if pm.template_exists("template_name", "v1"):
-    print("มี template")
-else:
-    print("ไม่มี template")
-```
-
-**Template ผิดรูปแบบ**
-- ตรวจสอบ YAML syntax
-- ตรวจสอบ {variable} placeholders
-- ตรวจสอบ metadata section 
+1. Always create a new version when making significant changes to a prompt
+2. Document changes between versions
+3. Use semantic versioning for template versions (v1, v2, etc.)
+4. Test new prompt versions before deploying to production

@@ -1,29 +1,29 @@
-# การประเมินระบบ RAG
+# RAG System Evaluation
 
-## ภาพรวม
+## Overview
 
-ระบบ RAG-Chain มีเครื่องมือประเมินครบชุด ประกอบด้วย:
+The RAG-Chain system includes a comprehensive evaluation framework with:
 
-1. **Retriever Evaluation** - ประเมินการดึงข้อมูล
-2. **Generator Evaluation** - ประเมินการสร้างคำตอบ  
-3. **End-to-End Evaluation** - ประเมินระบบรวม
+1. **Retriever Evaluation** - Evaluate document retrieval performance
+2. **Generator Evaluation** - Evaluate answer generation quality
+3. **End-to-End Evaluation** - Evaluate complete system performance
 
-## โครงสร้าง
+## Structure
 
 ```
 evaluation/
-├── retriever_evaluation.py    # ประเมิน retriever
-├── generator_evaluation.py    # ประเมิน generator
-├── e2e_evaluation.py          # ประเมินแบบ end-to-end
-├── metrics.py                 # เมตริกส์ต่างๆ
-└── test_data/                 # ข้อมูลทดสอบ
+├── retriever_evaluation.py    # Retriever evaluation
+├── generator_evaluation.py    # Generator evaluation
+├── e2e_evaluation.py          # End-to-end evaluation
+├── metrics.py                 # Various metrics
+└── test_data/                 # Test datasets
     ├── golden_dataset_v1.json
     └── golden_dataset_v2.json
 ```
 
-## การใช้งาน
+## Usage
 
-### 1. ประเมิน Retriever
+### 1. Retriever Evaluation
 
 ```python
 from evaluation.retriever_evaluation import evaluate_retriever
@@ -35,7 +35,7 @@ results = evaluate_retriever(
 )
 ```
 
-### 2. ประเมิน Generator
+### 2. Generator Evaluation
 
 ```python
 from evaluation.generator_evaluation import evaluate_generator
@@ -47,7 +47,7 @@ results = evaluate_generator(
 )
 ```
 
-### 3. ประเมินแบบ End-to-End
+### 3. End-to-End Evaluation
 
 ```python
 from evaluation.e2e_evaluation import evaluate_e2e_system
@@ -59,62 +59,62 @@ results = evaluate_e2e_system(
 )
 ```
 
-## เมตริกส์หลัก
+## Key Metrics
 
 ### Retriever
-- **Precision@K**: ความแม่นยำของเอกสารที่ดึงมา
-- **Recall@K**: ความครอบคลุมของเอกสารที่เกี่ยวข้อง
+- **Precision@K**: Accuracy of retrieved documents
+- **Recall@K**: Coverage of relevant documents
 - **MRR**: Mean Reciprocal Rank
 
 ### Generator
-- **Relevancy**: ความเกี่ยวข้องของคำตอบ
-- **Faithfulness**: ความถูกต้องตามบริบท
-- **Answer Completeness**: ความสมบูรณ์ของคำตอบ
+- **Relevancy**: Answer relevance to the question
+- **Faithfulness**: Answer accuracy based on context
+- **Answer Completeness**: Completeness of the response
 
 ### End-to-End
-- **Overall Accuracy**: ความถูกต้องโดยรวม
-- **Response Time**: เวลาตอบสนอง
-- **Cost per Query**: ต้นทุนต่อคำถาม
+- **Overall Accuracy**: System-wide accuracy
+- **Response Time**: Query response time
+- **Cost per Query**: Cost per query execution
 
-## การรันการประเมิน
+## Running Evaluations
 
 ```bash
-# ประเมิน retriever
+# Evaluate retriever
 python evaluation/retriever_evaluation.py
 
-# ประเมิน generator
+# Evaluate generator
 python evaluation/generator_evaluation.py
 
-# ประเมินแบบ end-to-end
+# Run end-to-end evaluation
 python evaluation/e2e_evaluation.py
 ```
 
-## ดูผลลัพธ์ใน MLflow
+## View Results in MLflow
 
 ```bash
-# เปิด MLflow UI
+# Start MLflow UI
 mlflow ui --port 5000
 
-# เข้าดูที่ http://localhost:5000
+# Access at http://localhost:5000
 ```
 
-## การเตรียมข้อมูลทดสอบ
+## Preparing Test Data
 
-สร้างไฟล์ JSON ตามรูปแบบ:
+Create a JSON file with the following format:
 
 ```json
 [
   {
-    "question": "คำถามทดสอบ",
-    "expected_answer": "คำตอบที่คาดหวัง",
-    "context": "บริบทที่เกี่ยวข้อง"
+    "question": "Test question",
+    "expected_answer": "Expected answer",
+    "context": "Relevant context"
   }
 ]
 ```
 
-## Tips สำหรับการประเมิน
+## Evaluation Best Practices
 
-1. **ใช้ข้อมูลทดสอบที่หลากหลาย** - ครอบคลุมกรณีต่างๆ
-2. **ประเมินเป็นระยะ** - ติดตามการเปลี่ยนแปลง
-3. **ใช้หลายเมตริกส์** - ไม่พึ่งแค่ตัวเดียว
-4. **ทดสอบกับผู้ใช้จริง** - User acceptance testing 
+1. **Use diverse test data** - Cover various scenarios
+2. **Evaluate regularly** - Track performance changes
+3. **Use multiple metrics** - Don't rely on a single metric
+4. **Test with real users** - Conduct user acceptance testing 
