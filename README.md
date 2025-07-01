@@ -1,5 +1,11 @@
 # RAG-Chain Chatbot
 
+![Data Versioning](https://img.shields.io/badge/Data-Versioning-blue?style=flat-square)
+![Prompt Versioning](https://img.shields.io/badge/Prompts-Versioning-informational?style=flat-square)
+![MLflow](https://img.shields.io/badge/MLOps-MLflow-orange?style=flat-square&logo=mlflow)
+![DeepEval](https://img.shields.io/badge/Evaluation-DeepEval-purple?style=flat-square)
+![Langchain](https://img.shields.io/badge/Framework-Langchain-green?style=flat-square&logo=langchain)  
+
 A production-ready Retrieval-Augmented Generation (RAG) chatbot system with comprehensive data versioning, MLflow integration, and evaluation capabilities. Built for sales and support automation with Thai language support.
 
 ## 🚀 Quick Start
@@ -58,16 +64,9 @@ ragchain-chatbot/
 - **Language**: Python 3.12+
 - **LLM and Embedding**: OpenAI GPT models
 - **Vector Store**: FAISS 
-- **Evaluation**: DeepEval framework
-- **Model Tracking**: MLflow
 - **Storage**: Local filesystem + Google Cloud Storage
 - **Package Manager**: uv
- 
-## 🆘 Support
-
-- 📖 [Documentation](docs/README.md)
-- 🐛 [Issue Tracker](https://github.com/your-org/ragchain-chatbot/issues)
-- 💬 [Discussions](https://github.com/your-org/ragchain-chatbot/discussions)
-- 🔧 [Troubleshooting](docs/troubleshooting.md)
+- **Frameworks**: Langchain, DeepEval, MLflow
+  
 
 "This Project Built on my meticulously designed architecture and Design System, with code accelerated through Cursor.sh and Claude."

@@ -1,3 +1,4 @@
 - Implement LLM memory
+- Implement guardrail
 - Set Evaluation Folder Script
 - Write notebook tutorial
