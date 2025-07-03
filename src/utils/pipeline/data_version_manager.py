@@ -181,6 +181,7 @@ class DataVersionManager:
     def _initialize_version_directories(self) -> None:
         """
         Initializes version directories if they don't exist and ensures 'latest' symlink is set.
+        Also initializes corresponding index directory structure.
         """
         # Check if any version directories exist
         version_dirs = [
@@ -220,6 +221,41 @@ class DataVersionManager:
                         f"Failed to create 'latest' symlink pointing to {latest_version}"
                     )
 
+        # Initialize corresponding index directory structure
+        self._initialize_index_directories()
+
+    def _initialize_index_directories(self) -> None:
+        """
+        Initializes index directory structure to match data version structure.
+        Creates index directories for existing data versions and sets up symlinks.
+        """
+        try:
+            # Get all available data versions
+            data_versions = self.list_available_versions()
+            
+            if not data_versions:
+                logger.warning("No data versions found, skipping index directory initialization")
+                return
+            
+            # Create index directories for each data version
+            for version in data_versions:
+                index_version_dir = self.base_index_dir / version
+                if not index_version_dir.exists():
+                    index_version_dir.mkdir(parents=True, exist_ok=True)
+                    logger.info(f"Created index directory for version {version}: {index_version_dir}")
+            
+            # Create/update 'latest' symlink for index directory
+            latest_data_version = data_versions[-1]  # Last in sorted list
+            index_latest_link = self.base_index_dir / "latest"
+            
+            if self._create_symlink(latest_data_version, str(index_latest_link)):
+                logger.info(f"Set index 'latest' to point to {latest_data_version}")
+            else:
+                logger.warning(f"Failed to create index 'latest' symlink to {latest_data_version}")
+                
+        except Exception as e:
+            logger.warning(f"Failed to initialize index directories: {e}")
+
     def get_data_version_path(self, version: Optional[str] = None) -> Union[Path, str]:
         """
         Retrieves the directory path for the specified data version.
@@ -251,6 +287,7 @@ class DataVersionManager:
     ) -> Union[Path, str]:
         """
         Retrieves the index path for the specified data version.
+        Automatically creates the index directory if it doesn't exist.
 
         Parameters
         ----------
@@ -265,7 +302,7 @@ class DataVersionManager:
         Raises
         ------
         ValueError
-            If the index directory for the specified version does not exist.
+            If the data version doesn't exist (for validation).
         """
         version = version or self.data_version
 
@@ -273,12 +310,29 @@ class DataVersionManager:
             # For GCS
             return f"gs://{self.gcs_bucket}/{self.gcs_prefix}/indexes/{version}"
         else:
-            # For local storage
+            # For local storage - Auto-create index directory structure
             index_dir = self.base_index_dir / version
+            
+            # Create the index directory if it doesn't exist
             if not index_dir.exists():
-                raise ValueError(
-                    f"Index directory for version '{version}' does not exist."
-                )
+                logger.info(f"Creating index directory for version '{version}': {index_dir}")
+                index_dir.mkdir(parents=True, exist_ok=True)
+                
+                # If this is the 'latest' version, also create/update the symlink
+                if version == "latest":
+                    # Find the actual latest data version to link to
+                    try:
+                        data_versions = self.list_available_versions()
+                        if data_versions:
+                            latest_data_version = data_versions[-1]
+                            # Create a corresponding versioned index directory
+                            versioned_index_dir = self.base_index_dir / latest_data_version
+                            if not versioned_index_dir.exists():
+                                versioned_index_dir.mkdir(parents=True, exist_ok=True)
+                                logger.info(f"Created versioned index directory: {versioned_index_dir}")
+                    except Exception as e:
+                        logger.warning(f"Could not create versioned index directory: {e}")
+                        
             return index_dir
 
     def list_available_versions(self) -> List[str]:
@@ -406,6 +460,7 @@ class DataVersionManager:
     def _create_local_version(self, new_version: str, source_files: List[str]) -> None:
         """
         Creates a new data version in local storage.
+        Also creates corresponding index directory structure and updates symlinks.
 
         Parameters
         ----------
@@ -414,6 +469,7 @@ class DataVersionManager:
         source_files : List[str]
             A list of file paths to copy to the new version.
         """
+        # Create data version directory
         version_path = self.raw_dir / new_version
         version_path.mkdir(exist_ok=True)
 
@@ -425,9 +481,26 @@ class DataVersionManager:
         # Update 'latest' symlink to point to the new version
         latest_link = self.raw_dir / "latest"
         if self._create_symlink(new_version, str(latest_link)):
-            logger.info(f"Set 'latest' to point to {new_version}")
+            logger.info(f"Set data 'latest' to point to {new_version}")
         else:
-            logger.warning(f"Failed to update 'latest' symlink to {new_version}")
+            logger.warning(f"Failed to update data 'latest' symlink to {new_version}")
+
+        # Create corresponding index directory structure
+        try:
+            # Create versioned index directory
+            index_version_dir = self.base_index_dir / new_version
+            index_version_dir.mkdir(parents=True, exist_ok=True)
+            logger.info(f"Created index directory for version {new_version}: {index_version_dir}")
+            
+            # Update/create 'latest' symlink for index directory
+            index_latest_link = self.base_index_dir / "latest"
+            if self._create_symlink(new_version, str(index_latest_link)):
+                logger.info(f"Set index 'latest' to point to {new_version}")
+            else:
+                logger.warning(f"Failed to update index 'latest' symlink to {new_version}")
+                
+        except Exception as e:
+            logger.warning(f"Failed to create index directory structure for {new_version}: {e}")
 
     def _create_gcs_version(self, new_version: str, source_files: List[str]) -> None:
         """
