@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-import logging
 import os
 import sys
 from pathlib import Path
@@ -10,7 +9,7 @@ from typing import List
 # Add project root to sys.path to enable importing from src
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.utils.logger import setup_logging, get_logger
+from src.utils.logger import get_logger, setup_logging
 from src.utils.pipeline.data_version_manager import DataVersionManager
 
 # Setup logging
@@ -20,6 +19,7 @@ logger = get_logger(__name__)
 """
 Script for creating a new data version using DataVersionManager
 """
+
 
 def main() -> None:
     """
@@ -123,7 +123,7 @@ def main() -> None:
 
         # Show available versions
         versions = dvm.list_available_versions()
-        logger.info("All available versions: %s", ', '.join(versions))
+        logger.info("All available versions: %s", ", ".join(versions))
 
         # Show latest version path
         latest_path = dvm.get_data_version_path("latest")

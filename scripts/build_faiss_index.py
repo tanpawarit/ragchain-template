@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-import logging
 import os
 import sys
 from pathlib import Path
@@ -11,8 +10,7 @@ from typing import Any, Dict
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.components.ingestion import DataIngestionPipeline
-from src.utils.config.app_config import AppConfig
-from src.utils.logger import setup_logging, get_logger
+from src.utils.logger import get_logger, setup_logging
 
 """
 Script for building FAISS index from the latest data version or a specified version
@@ -127,7 +125,9 @@ def main() -> int:
 
         pipe.run(chunking_params=chunking_params)
 
-        logger.info("✅ Successfully built FAISS index for data version '%s'", args.data_version)
+        logger.info(
+            "✅ Successfully built FAISS index for data version '%s'", args.data_version
+        )
         logger.info("   Index saved at: %s", pipe.faiss_index_path)
 
     except Exception as e:

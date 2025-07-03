@@ -1,6 +1,7 @@
 import os
 import time
 from typing import Any, Dict, List, Literal, Optional
+
 import tiktoken
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
@@ -275,7 +276,6 @@ class DataIngestionPipeline:
             logger.debug(
                 f"Chunking completed in {time.time() - start_time:.2f} seconds"
             )
- 
 
             tokenizer = tiktoken.encoding_for_model(
                 self.embedding_model_name
