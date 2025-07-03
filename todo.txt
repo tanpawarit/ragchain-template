@@ -1,6 +1,6 @@
 - Implement LLM memory
 - Implement guardrail
 - llm caching
-- เช็คการทำงาน symlink script
+- อธิบายการทำงาน symlink script
 - Set Evaluation Folder Script
 - Write notebook tutorial

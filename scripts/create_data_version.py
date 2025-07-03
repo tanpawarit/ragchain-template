@@ -119,7 +119,7 @@ def main() -> None:
 
         # Create new version
         new_ver = dvm.create_new_version(args.files, increment_type=args.inc)
-        logger.info("✅ Successfully created new data version %s", new_ver)
+        logger.info("Successfully created new data version %s", new_ver)
 
         # Show available versions
         versions = dvm.list_available_versions()

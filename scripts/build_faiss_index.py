@@ -126,12 +126,12 @@ def main() -> int:
         pipe.run(chunking_params=chunking_params)
 
         logger.info(
-            "✅ Successfully built FAISS index for data version '%s'", args.data_version
+            "Successfully built FAISS index for data version '%s'", args.data_version
         )
         logger.info("   Index saved at: %s", pipe.faiss_index_path)
 
     except Exception as e:
-        logger.error("❌ Error: %s", e)
+        logger.error("Error: %s", e)
         return 1
 
     return 0
