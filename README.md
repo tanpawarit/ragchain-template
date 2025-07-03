@@ -1,63 +1,12 @@
 # RAG-Chain Chatbot
-
-![Data Versioning](https://img.shields.io/badge/Data-Versioning-blue?style=flat-square)
-![FAISS Index Versioning](https://img.shields.io/badge/Index-Versioning-blue?style=flat-square)
+ 
+![FAISS](https://img.shields.io/badge/FAISS-blue?style=flat-square)
 ![Prompt Versioning](https://img.shields.io/badge/Prompts-Versioning-informational?style=flat-square)
 ![MLflow](https://img.shields.io/badge/MLOps-MLflow-orange?style=flat-square&logo=mlflow)
 ![DeepEval](https://img.shields.io/badge/Evaluation-DeepEval-purple?style=flat-square)
 ![Langchain](https://img.shields.io/badge/Framework-Langchain-green?style=flat-square&logo=langchain)  
 
 A production-ready Retrieval-Augmented Generation (RAG) chatbot system with comprehensive data versioning, MLflow integration, and evaluation capabilities. Built for sales and support automation with Thai language support.
-
-## 🚀 Quick Start
-
-### For New Projects (No existing data versions or indexes)
-
-```bash
-# 1. Install dependencies
-uv sync
-
-# 2. Configure your API key (edit config.yaml with your OpenAI API key)
-# Edit in config.yaml file:
-openai:
-  token: "your-openai-api-key-here"
-
-# 3. Create required directories
-mkdir -p artifacts
-mkdir -p data/raw
-
-# 4. Add your data files to data/raw/
-# Place your .txt files in data/raw/ directory
-# Example: data/raw/document1.txt, data/raw/document2.txt
-
-# 5. Create first data version from your files
-python scripts/create_data_version.py --files data/raw/*.txt --inc minor
-
-# Or specify files explicitly:
-# python scripts/create_data_version.py --files data/raw/workshop.txt data/raw/rerun.txt data/raw/overall.txt --inc minor
-
-# 6. Build FAISS index (index directories will be created automatically)
-python scripts/build_faiss_index.py --data-version latest --use-semantic-chunking
-
-# 7. Run the chatbot
-python -m src.components.ragchain
-```
-
-### For Projects with Existing Data
-
-```bash
-# 1. Activate environment
-source .venv/bin/activate  # or uv sync
-
-# 2. Create new data version from existing files
-python scripts/create_data_version.py --files data/raw/*.txt --inc minor
-
-# 3. Build FAISS index
-python scripts/build_faiss_index.py --data-version latest --use-semantic-chunking
-
-# 4. Run the chatbot
-python -m src.components.ragchain
-```
 
 ## ✨ Key Features
 
@@ -66,10 +15,19 @@ python -m src.components.ragchain
 - **🔍 Faiss Index Versioning**: Automatic index versioning with data version synchronization
 - **📝 Prompt Versioning**: YAML-based prompt templates with version control
 - **📈 MLflow Integration**: Comprehensive experiment tracking and model registry
-- **🧪 Multi-Modal Evaluation**: Retriever, generator, and end-to-end evaluation with DeepEval 
-- **🇹🇭 Thai Language Support**: Optimized for Thai content with semantic chunking
-- **💰 Cost Optimization**: Efficient API usage tracking and optimization
-- **🔧 Auto Index Versioning**: Index directories automatically sync with data versions
+- **🧪 Multi-Modal Evaluation**: Retriever, generator, and end-to-end evaluation with DeepEval
+- **🌏 Thai Language Support**: Optimized for both Thai and English content
+- **☁️ Cloud-Ready**: GCS integration for production deployments
+
+## 🛠️ Tech Stack
+
+- **Language**: Python 3.12+
+- **LLM and Embedding**: OpenAI GPT models
+- **Vector Store**: FAISS 
+- **Storage**: Local filesystem + Google Cloud Storage
+- **Package Manager**: uv
+- **Frameworks**: Langchain, DeepEval, MLflow
+- **Evaluation**: Multi-modal evaluation with DeepEval metrics
 
 ## 🏗️ Architecture
 
@@ -103,8 +61,6 @@ ragchain-chatbot/
 └── artifacts/                           # Generated indexes (auto-versioned)
     ├── latest -> vX.X                   # Symlink to latest index (auto-created)
     └── vX.X/                            # Index version directories (auto-created)
-
-
 ```
 
 ### 🔄 Data Flow Architecture
@@ -131,53 +87,68 @@ ragchain-chatbot/
 💬 Chatbot Response
 ```
 
+## 🚀 Getting Started
+
+Ready to try it out? Check out our comprehensive guides:
+
+**👉 [Quick Start Guide](docs/quickstart.md)** - Get running in 5 minutes
+
+### Quick Setup Preview
+
+```bash
+# 1. Install dependencies
+uv sync
+
+# 2. Configure API key in configs/model_config.yaml
+# 3. Add your .txt files to data/raw/
+# 4. Create data version and build index
+python scripts/create_data_version.py --files data/raw/*.txt --inc minor
+python scripts/build_faiss_index.py --data-version latest --use-semantic-chunking
+
+# 5. Run the chatbot
+python -m src.components.ragchain
+```
+
 ## 📚 Documentation
 
 **👉 [Complete Documentation](docs/README.md)**
 
-### Quick Links
+### Essential Guides
 - **🚀 [Quick Start Guide](docs/quickstart.md)** - Get running in 5 minutes
 - **☁️ [GCS Setup](docs/gcs_setup.md)** - Production storage setup
 - **📊 [System Evaluation](docs/evaluation.md)** - System evaluation framework
-- **🔧 [Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
 - **📝 [Prompt Management](docs/prompts.md)** - Prompt templates and versioning
-
-## 🛠️ Tech Stack
-
-- **Language**: Python 3.12+
-- **LLM and Embedding**: OpenAI GPT models
-- **Vector Store**: FAISS 
-- **Storage**: Local filesystem + Google Cloud Storage
-- **Package Manager**: uv
-- **Frameworks**: Langchain, DeepEval, MLflow
 
 ## 🔄 What's New
 
 **Auto Index Versioning**: Index directories now automatically sync with data versions! No more manual directory creation.
 
-"This Project Built on my meticulously designed architecture and Design System, with code accelerated through Cursor.sh and Claude."
+## 💡 System Requirements & Configuration
 
-## �� Setup Details
+### Prerequisites
+- **Python**: 3.9+
+- **Package Manager**: uv
+- **API Key**: OpenAI API key with credits
+- **Memory**: 4GB+ available RAM
 
-### System Requirements
-- Python 3.9+
-- `uv` package manager
-- OpenAI API key (must have credits)
+### Data Specifications
+- **Format**: .txt files only
+- **Languages**: Thai and English support
+- **File Size**: Recommended < 10MB per file
+- **Scalability**: Unlimited files (start with 2-5)
 
-### Data Preparation
-1. **Support .txt files only** - Thai or English text
-2. **File Size** - Recommended < 10MB per file
-3. **Number of Files** - Unlimited, but start with 2-5 files
-
-### API Key Configuration
+### API Configuration
 ```yaml
-# In config.yaml
+# In configs/model_config.yaml
 openai:
-  token: "sk-proj-xxxxxxxxxxxxxxxxxxxxx"  # API key from OpenAI
+  token: "sk-proj-xxxxxxxxxxxxxxxxxxxxx"  # Your OpenAI API key
   
-# MLflow configuration (not required)
+# MLflow integration (optional)
 mlflow:
   tracking_uri: "http://localhost:5000"
   experiment_name: "rag-chatbot-production"
 ```
- 
+
+---
+
+*"This project built on my meticulously designed architecture and Design System, with code accelerated through Cursor.sh and Claude."*

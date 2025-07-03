@@ -114,5 +114,5 @@ python examples/prompt_templates_example.py
 ## 🔗 เอกสารเพิ่มเติม
 
 - [Quick Start Guide](../docs/quickstart.md) - เริ่มต้นใช้งาน
-- [Troubleshooting](../docs/troubleshooting.md) - แก้ปัญหา
+
 - [Complete Documentation](../docs/README.md) - เอกสารทั้งหมด 

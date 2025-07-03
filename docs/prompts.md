@@ -76,7 +76,15 @@ template: |
 
 ## Best Practices
 
-1. Always create a new version when making significant changes to a prompt
-2. Document changes between versions
-3. Use semantic versioning for template versions (v1, v2, etc.)
-4. Test new prompt versions before deploying to production
+1. **Version Control** - Always create a new version when making significant changes
+2. **Documentation** - Document changes between versions
+3. **Semantic Versioning** - Use clear version naming (v1, v2, etc.)
+4. **Testing** - Test new prompt versions before deploying to production
+5. **Evaluation** - Use the evaluation framework to measure prompt performance
+
+## Related Documentation
+
+- **[Quick Start](quickstart.md)** - Basic setup and configuration
+- **[System Evaluation](evaluation.md)** - Test your prompt changes  
+- **[GCS Setup](gcs_setup.md)** - Production prompt management
+- **[Complete Documentation](README.md)** - Return to documentation overview
