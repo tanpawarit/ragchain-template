@@ -1,6 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
+import logging
 import os
 import sys
 from pathlib import Path
@@ -9,15 +10,16 @@ from typing import List
 # Add project root to sys.path to enable importing from src
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.utils.logger import get_logger
+from src.utils.logger import setup_logging, get_logger
 from src.utils.pipeline.data_version_manager import DataVersionManager
+
+# Setup logging
+setup_logging()
+logger = get_logger(__name__)
 
 """
 Script for creating a new data version using DataVersionManager
 """
-
-logger = get_logger(__name__)
-
 
 def main() -> None:
     """
@@ -117,17 +119,15 @@ def main() -> None:
 
         # Create new version
         new_ver = dvm.create_new_version(args.files, increment_type=args.inc)
-        logger.info(f"✅ Successfully created new data version {new_ver}")
-        print(f"✅ Successfully created new data version {new_ver}")
+        logger.info("✅ Successfully created new data version %s", new_ver)
 
-        # Show list of available versions
+        # Show available versions
         versions = dvm.list_available_versions()
-        logger.info(f"All available versions: {', '.join(versions)}")
-        print(f"All available versions: {', '.join(versions)}")
+        logger.info("All available versions: %s", ', '.join(versions))
 
-        # Show path of latest version
+        # Show latest version path
         latest_path = dvm.get_data_version_path("latest")
-        print(f"Latest version path: {latest_path}")
+        logger.info("Latest version path: %s", latest_path)
 
     except Exception as e:
         logger.error(f"Error: {e}")

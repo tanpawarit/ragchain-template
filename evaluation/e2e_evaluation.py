@@ -1,8 +1,12 @@
 from typing import Any, Callable, Dict, List, Optional, Union
 
+import json
+import logging
 import numpy as np
 from openai import OpenAI
 from tqdm import tqdm
+
+logger = logging.getLogger(__name__)
 
 """
 End-to-end evaluation module for the Typhoon RAG system.
@@ -138,23 +142,8 @@ def evaluate_e2e_system(
                 }
 
             except Exception as e:
-                print(f"Error processing question '{question}': {e}")
-                evaluation_result = {
-                    "answer_relevance": 0.0,
-                    "context_relevance": 0.0,
-                    "factual_accuracy": 0.0,
-                    "hallucination": 10.0,  # High hallucination score for errors
-                    "overall_quality": 0.0,
-                }
-
-                query_result = {
-                    "question": question,
-                    "answer": f"ERROR: {str(e)}",
-                    "context": "",
-                    "ground_truth": ground_truth,
-                    "metrics": evaluation_result,
-                    "error": str(e),
-                }
+                logger.error("Error processing question '%s': %s", question, e)
+                continue
 
             results["per_query"].append(query_result)
 
@@ -259,19 +248,10 @@ def evaluate_rag_response(
             )
 
         # Parse the evaluation result
-        import json
-
         evaluation_result = json.loads(response.choices[0].message.content)
 
         return evaluation_result
 
     except Exception as e:
-        print(f"Error during evaluation: {e}")
-        # Return default values in case of error
-        return {
-            "answer_relevance": 0.0,
-            "context_relevance": 0.0,
-            "factual_accuracy": 0.0,
-            "hallucination": 10.0,  # High hallucination score for errors
-            "overall_quality": 0.0,
-        }
+        logger.error("Error during evaluation: %s", e)
+        return {}

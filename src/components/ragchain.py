@@ -2,6 +2,9 @@ from src.components.ragchain_runner import RAGChainRunner
 from src.utils.config.app_config import AppConfig
 from src.utils.pipeline.mlflow_tracker import MLflowTracker
 from src.utils.pipeline.vectorstore_manager import load_vectorstore
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def main() -> None:
@@ -22,9 +25,9 @@ def main() -> None:
 
         rag = RAGChainRunner(cfg, mlflow_tracker=tracker, vectorstore=vectorstore)
         question = input("💬 Question: ")
-        print("🧠 Thinking...")
+        logger.info("🧠 Thinking...")
         answer = rag.answer(question, user_id=user_id if user_id else None)
-        print("🤖", answer)
+        logger.info("🤖 %s", answer)
 
 
 if __name__ == "__main__":  # pragma: no cover

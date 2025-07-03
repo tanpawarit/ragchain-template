@@ -11,6 +11,11 @@ from deepeval.test_case import LLMTestCase
 
 from src.utils.mlflow_tracker import MLflowTracker
 from src.utils.app_config import AppConfig
+import logging
+import tempfile
+import uuid
+
+logger = logging.getLogger(__name__)
 
 
 def evaluate_retriever_evaluation(
@@ -266,7 +271,7 @@ def evaluate_retriever_evaluation(
         try:
             results_path.unlink(missing_ok=True)
         except Exception as e:
-            print(f"Warning: failed to delete temp file {results_path}: {e}")
+            logger.warning("Failed to delete temp file %s: %s", results_path, e)
     
     # Calculate traditional averages (if available)
     traditional_metrics = {}

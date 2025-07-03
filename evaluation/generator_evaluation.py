@@ -1,8 +1,12 @@
+import json
+import logging
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 from openai import OpenAI
 from tqdm import tqdm
+
+logger = logging.getLogger(__name__)
 
 """
 Generator evaluation module for the Typhoon RAG system.
@@ -210,14 +214,12 @@ def evaluate_response_quality(
             )
 
         # Parse the evaluation result
-        import json
-
         evaluation_result = json.loads(response.choices[0].message.content)
 
         return evaluation_result
 
     except Exception as e:
-        print(f"Error during evaluation: {e}")
+        logger.error("Error during evaluation: %s", e)
         # Return default values in case of error
         return {
             "relevance": 0.0,

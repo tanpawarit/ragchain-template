@@ -19,6 +19,9 @@ dependencies = [
     "deepeval>=0.20.4",
     "chromadb>=1.0.12",
     "pyyaml>=6.0.2",
+    "numpy>=2.3.1",
+    "sentence-transformers>=5.0.0",
+    "torch>=2.7.1",
 ]
 
 [project.optional-dependencies]

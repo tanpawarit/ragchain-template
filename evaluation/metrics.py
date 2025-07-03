@@ -1,7 +1,10 @@
 from typing import Any, List, Optional, Set
+import logging
 
 import torch
 from sentence_transformers import SentenceTransformer
+
+logger = logging.getLogger(__name__)
 
 """
 Custom evaluation metrics for the Typhoon RAG system.
@@ -370,9 +373,9 @@ class HallucinationMetrics:
                 score = float(score_text)
                 return max(0.0, min(1.0, score))  # Clamp to [0, 1]
             except ValueError:
-                print(f"Failed to parse score from response: {score_text}")
+                logger.error("Failed to parse score from response: %s", score_text)
                 return 0.0
 
         except Exception as e:
-            print(f"Error in fact verification: {e}")
+            logger.error("Error in fact verification: %s", e)
             return 0.0

@@ -1,5 +1,11 @@
+import logging
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import List, Optional
+
+import yaml
+
+logger = logging.getLogger(__name__)
 
 """
 Configuration settings for evaluation modules.
@@ -154,8 +160,9 @@ def load_config(config_path: Optional[str] = None) -> EvaluationConfig:
                     setattr(config, key, value)
 
         except Exception as e:
-            print(f"Error loading configuration from {config_path}: {e}")
-            print("Using default configuration")
+            logger.error("Error loading configuration from %s: %s", config_path, e)
+            logger.info("Using default configuration")
+            return EvaluationConfig()
 
     # Check for environment variables
     if not config.openai_api_key:
