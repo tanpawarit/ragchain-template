@@ -9,30 +9,14 @@ import logging
 import re
 from typing import List, Optional, Set, Tuple
 
-try:
-    import spacy
-    from spacy.language import Language
-    from spacy.tokens import Doc
+# Spacy imports
+import spacy
 
-    SPACY_AVAILABLE = True
-except ImportError:
-    SPACY_AVAILABLE = False
-    spacy = None
-    Language = None
-    Doc = None
-
-try:
-    from pythainlp import sent_tokenize, word_tokenize
-    from pythainlp.corpus.common import thai_stopwords
-    from pythainlp.util import isthai
-
-    PYTHAINLP_AVAILABLE = True
-except ImportError:
-    PYTHAINLP_AVAILABLE = False
-    word_tokenize = None
-    sent_tokenize = None
-    thai_stopwords = None
-    isthai = None
+# Pythainlp imports
+from pythainlp import sent_tokenize, word_tokenize
+from pythainlp.corpus.common import thai_stopwords
+from pythainlp.util import isthai
+from spacy.language import Language
 
 logger = logging.getLogger(__name__)
 
@@ -61,31 +45,23 @@ class NLPProcessor:
     def _initialize_processors(self) -> None:
         """Initialize spacy and pythainlp processors."""
         # Initialize spacy for English
-        if SPACY_AVAILABLE:
-            try:
-                self._spacy_nlp = spacy.load(self.spacy_model)
-                # Get English stop words from spacy
-                self._english_stopwords = set(self._spacy_nlp.Defaults.stop_words)
-                logger.info(f"Loaded spacy model: {self.spacy_model}")
-            except OSError:
-                logger.warning(
-                    f"Spacy model {self.spacy_model} not found. Install with: python -m spacy download {self.spacy_model}"
-                )
-                self._spacy_nlp = None
-        else:
-            logger.warning("Spacy not available. Install with: pip install spacy")
+        try:
+            self._spacy_nlp = spacy.load(self.spacy_model)
+            # Get English stop words from spacy
+            self._english_stopwords = set(self._spacy_nlp.Defaults.stop_words)
+            logger.info(f"Loaded spacy model: {self.spacy_model}")
+        except OSError:
+            logger.warning(
+                f"Spacy model {self.spacy_model} not found. Install with: python -m spacy download {self.spacy_model}"
+            )
+            self._spacy_nlp = None
 
         # Initialize pythainlp for Thai
-        if PYTHAINLP_AVAILABLE:
-            try:
-                self._thai_stopwords = set(thai_stopwords())
-                logger.info("Loaded pythainlp Thai stop words")
-            except Exception as e:
-                logger.warning(f"Failed to load pythainlp stop words: {e}")
-        else:
-            logger.warning(
-                "Pythainlp not available. Install with: pip install pythainlp"
-            )
+        try:
+            self._thai_stopwords = set(thai_stopwords())
+            logger.info("Loaded pythainlp Thai stop words")
+        except Exception as e:
+            logger.warning(f"Failed to load pythainlp stop words: {e}")
 
     def detect_language(self, text: str) -> str:
         """
@@ -100,13 +76,12 @@ class NLPProcessor:
         if not text:
             return "en"
 
-        if PYTHAINLP_AVAILABLE and isthai:
-            # Count Thai characters
-            thai_chars = sum(1 for char in text if isthai(char))
-            total_chars = len([char for char in text if char.isalpha()])
+        # Count Thai characters
+        thai_chars = sum(1 for char in text if isthai(char))
+        total_chars = len([char for char in text if char.isalpha()])
 
-            if total_chars > 0 and thai_chars / total_chars > 0.3:
-                return "th"
+        if total_chars > 0 and thai_chars / total_chars > 0.3:
+            return "th"
 
         return "en"
 
@@ -126,7 +101,7 @@ class NLPProcessor:
 
         language = self.detect_language(text)
 
-        if language == "th" and PYTHAINLP_AVAILABLE:
+        if language == "th":
             # Use pythainlp for Thai
             tokens = word_tokenize(text, engine="newmm")
             if remove_stopwords:
@@ -249,7 +224,7 @@ class NLPProcessor:
 
         language = self.detect_language(text)
 
-        if language == "th" and PYTHAINLP_AVAILABLE:
+        if language == "th":
             # Use pythainlp for Thai sentence tokenization
             return sent_tokenize(text, engine="whitespace+newline")
         elif self._spacy_nlp:

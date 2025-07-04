@@ -140,18 +140,18 @@ def demonstrate_guardrails_with_nlp() -> None:
 
         # Length validation
         length_result = length_validator.validate(test_case["answer"])
-        print(f"   Length: {length_result.result.value} - {length_result.message}")
+        print(f"Length: {length_result.result.value} - {length_result.message}")
 
         # Relevance validation
         relevance_result = relevance_validator.validate(
             {"question": test_case["question"], "answer": test_case["answer"]}
         )
         print(
-            f"   Relevance: {relevance_result.result.value} - {relevance_result.message}"
+            f"Relevance: {relevance_result.result.value} - {relevance_result.message}"
         )
         if relevance_result.metadata and "relevance_score" in relevance_result.metadata:
             print(
-                f"   Relevance Score: {relevance_result.metadata['relevance_score']:.3f}"
+                f"Relevance Score: {relevance_result.metadata['relevance_score']:.3f}"
             )
 
         # Hallucination validation
@@ -159,10 +159,8 @@ def demonstrate_guardrails_with_nlp() -> None:
             {"answer": test_case["answer"], "context": test_case["context"]}
         )
         print(
-            f"   Hallucination: {hallucination_result.result.value} - {hallucination_result.message}"
+            f"Hallucination: {hallucination_result.result.value} - {hallucination_result.message}"
         )
-
-        print()
 
 
 def demonstrate_performance_comparison() -> None:
