@@ -10,13 +10,9 @@
 
 ### 📚 Data Management Examples  
 - **[data_ingestion_example.py](data_ingestion_example.py)** - การ ingest และประมวลผลข้อมูล
-- **[data_versioning_example.py](data_versioning_example.py)** - การจัดการเวอร์ชันข้อมูล
 
 ### 📝 Prompt Management Examples
 - **[prompt_templates_example.py](prompt_templates_example.py)** - การใช้งาน prompt templates
-
-### ☁️ Production Examples
-- **[production_gcs_setup.py](production_gcs_setup.py)** - การตั้งค่า GCS สำหรับ production
 
 ## 🚀 วิธีการรัน
 
@@ -40,9 +36,6 @@ python examples/simple_chatbot.py
 
 # การ ingest ข้อมูล
 python examples/data_ingestion_example.py
-
-# การจัดการเวอร์ชันข้อมูล
-python examples/data_versioning_example.py
 
 # การใช้งาน prompt templates
 python examples/prompt_templates_example.py
@@ -70,12 +63,6 @@ python examples/prompt_templates_example.py
 - การสร้าง FAISS index
 - การทดสอบการค้นหา
 
-### 📦 data_versioning_example.py
-**สำหรับ**: การจัดการเวอร์ชันข้อมูลอย่างเป็นระบบ
-- การสร้างเวอร์ชันใหม่
-- การติดตาม data lineage
-- การจัดการหลายเวอร์ชัน
-
 ### 📝 prompt_templates_example.py
 **สำหรับ**: การจัดการและใช้งาน prompt templates
 - การโหลดและใช้งาน templates
@@ -91,11 +78,7 @@ python examples/prompt_templates_example.py
 
 ### ต้องการปรับแต่ง?
 1. ดู `prompt_templates_example.py` สำหรับการจัดการ prompts
-2. ใช้ `data_versioning_example.py` สำหรับการจัดการข้อมูล
-
-### ใช้งาน Production?
-1. ดู `production_gcs_setup.py` สำหรับการตั้งค่า cloud storage
-2. อ่าน [docs/gcs_setup.md](../docs/gcs_setup.md) เพิ่มเติม
+2. ใช้ `data_ingestion_example.py` สำหรับการเรียนรู้การจัดการข้อมูล
 
 ## 🔧 การแก้ปัญหา
 
@@ -114,5 +97,4 @@ python examples/prompt_templates_example.py
 ## 🔗 เอกสารเพิ่มเติม
 
 - [Quick Start Guide](../docs/quickstart.md) - เริ่มต้นใช้งาน
-
 - [Complete Documentation](../docs/README.md) - เอกสารทั้งหมด 

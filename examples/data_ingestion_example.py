@@ -40,7 +40,7 @@ def main():
 
     # 2. สร้าง pipeline
     print("\n🔧 สร้าง Data Ingestion Pipeline...")
-    pipeline = DataIngestionPipeline(cfg=cfg, data_version="latest")
+    pipeline = DataIngestionPipeline(cfg=cfg)
     print("✅ Pipeline พร้อมใช้งาน")
 
     # 3. โหลดเอกสาร

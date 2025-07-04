@@ -22,7 +22,7 @@ def main():
 
     # 2. โหลด vectorstore
     print("\n📚 กำลังโหลดฐานข้อมูล...")
-    vectorstore = load_vectorstore(cfg, data_version="latest")
+    vectorstore = load_vectorstore(cfg)
     print("✅ โหลดฐานข้อมูลสำเร็จ")
 
     # 3. สร้าง RAG runner

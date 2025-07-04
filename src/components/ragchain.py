@@ -29,9 +29,7 @@ def main() -> None:
 
         # Load the vectorstore first
         logger.info("🔄 Loading vectorstore...")
-        vectorstore = load_vectorstore(
-            cfg, data_version="latest", mlflow_tracker=tracker
-        )
+        vectorstore = load_vectorstore(cfg, mlflow_tracker=tracker)
 
         rag = RAGChainRunner(cfg, mlflow_tracker=tracker, vectorstore=vectorstore)
 

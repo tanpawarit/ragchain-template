@@ -1,6 +1,6 @@
 # RAG-Chain Chatbot Documentation
 
-Welcome to the complete documentation for RAG-Chain Chatbot - a production-ready Retrieval-Augmented Generation system with comprehensive data versioning, MLflow integration, and evaluation capabilities.
+Welcome to the complete documentation for RAG-Chain Chatbot - a simple and production-ready Retrieval-Augmented Generation system with MLflow integration and evaluation capabilities.
 
 ## 📚 Documentation Overview
 
@@ -9,7 +9,6 @@ This documentation is organized into focused guides for different aspects of the
 ### 🚀 Getting Started
 - **[Quick Start Guide](quickstart.md)** - Get up and running in 5 minutes
   - Installation and setup
-  - First data version creation
   - Index building and chatbot testing
 
 ### 🏗️ System Components
@@ -24,18 +23,13 @@ This documentation is organized into focused guides for different aspects of the
 - DeepEval integration and metrics
 - MLflow tracking for evaluation results
 
-### ☁️ Production Deployment
-- **[Google Cloud Storage Setup](gcs_setup.md)** - Production storage configuration
-  - GCS bucket setup and authentication
-  - Service account configuration
-  - Hybrid storage patterns
-  - Production best practices
+
 
 ## 🏗️ System Architecture
 
 ```
 RAG-Chain System Flow
-├── Data Ingestion → Data Versioning → Index Building
+├── Data Ingestion → Index Building
 ├── Prompt Management → Template Versioning
 ├── RAG Pipeline → Retrieval + Generation
 └── Evaluation → Metrics + MLflow Tracking
@@ -47,8 +41,7 @@ RAG-Chain System Flow
 ```bash
 # Setup and run
 uv sync
-python scripts/create_data_version.py --files data/raw/*.txt --inc minor
-python scripts/build_faiss_index.py --data-version latest --use-semantic-chunking
+python scripts/build_faiss_index.py --use-semantic-chunking
 python -m src.components.ragchain
 
 # Evaluation
@@ -69,9 +62,8 @@ mlflow ui --port 5000
 3. **[System Evaluation](evaluation.md)** - Testing and monitoring
 
 ### For Production Teams
-1. **[GCS Setup](gcs_setup.md)** - Cloud storage and scalability
-2. **[System Evaluation](evaluation.md)** - Performance monitoring
-3. **[Quick Start](quickstart.md)** - Deployment procedures
+1. **[System Evaluation](evaluation.md)** - Performance monitoring
+2. **[Quick Start](quickstart.md)** - Deployment procedures
 
 ## 🔗 External Resources
 
@@ -87,9 +79,8 @@ mlflow ui --port 5000
 3. Set up evaluation with [System Evaluation](evaluation.md)
 
 ### Production Deployment
-1. Set up [GCS storage](gcs_setup.md)
-2. Configure monitoring and evaluation
-3. Deploy using production configurations
+1. Configure monitoring and evaluation
+2. Deploy using production configurations
 
 ### System Optimization
 1. Run [evaluation framework](evaluation.md)

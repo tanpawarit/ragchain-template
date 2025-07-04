@@ -86,5 +86,4 @@ template: |
 
 - **[Quick Start](quickstart.md)** - Basic setup and configuration
 - **[System Evaluation](evaluation.md)** - Test your prompt changes  
-- **[GCS Setup](gcs_setup.md)** - Production prompt management
 - **[Complete Documentation](README.md)** - Return to documentation overview

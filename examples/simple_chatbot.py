@@ -23,7 +23,7 @@ class SimpleSalesChatbot:
         self.cfg = AppConfig.from_files("configs/model_config.yaml", "config.yaml")
 
         # โหลดระบบ RAG
-        vectorstore = load_vectorstore(self.cfg, data_version="latest")
+        vectorstore = load_vectorstore(self.cfg)
         self.rag = RAGChainRunner(self.cfg, vectorstore=vectorstore)
 
         # ข้อมูลสำหรับติดตาม

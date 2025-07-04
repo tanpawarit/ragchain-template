@@ -6,25 +6,22 @@
 ![DeepEval](https://img.shields.io/badge/Evaluation-DeepEval-purple?style=flat-square)
 ![Langchain](https://img.shields.io/badge/Framework-Langchain-green?style=flat-square&logo=langchain)  
 
-A production-ready Retrieval-Augmented Generation (RAG) chatbot system with comprehensive data versioning, MLflow integration, and evaluation capabilities. Built for sales and support automation with Thai language support.
+A simple and production-ready Retrieval-Augmented Generation (RAG) chatbot system with MLflow integration and evaluation capabilities. Built for sales and support automation with Thai language support.
 
 ## ✨ Key Features
 
-- **🤖 Production-Ready RAG**: Complete ingestion, chunking, embedding, and retrieval system
-- **📊 Data Versioning**: Automated versioning with lineage tracking and GCS support
-- **🔍 Faiss Index Versioning**: Automatic index versioning with data version synchronization
-- **📝 Prompt Versioning**: YAML-based prompt templates with version control
-- **📈 MLflow Integration**: Comprehensive experiment tracking and model registry
+- **🤖 Simple RAG System**: Complete ingestion, chunking, embedding, and retrieval system
+- **📝 Prompt Management**: YAML-based prompt templates with version control
+- **📈 MLflow Integration**: Experiment tracking and logging
 - **🧪 Multi-Modal Evaluation**: Retriever, generator, and end-to-end evaluation with DeepEval
 - **🌏 Thai Language Support**: Optimized for both Thai and English content
-- **☁️ Cloud-Ready**: GCS integration for production deployments
+- **⚡ Easy Setup**: Simplified configuration and deployment
 
 ## 🛠️ Tech Stack
 
 - **Language**: Python 3.12+
 - **LLM and Embedding**: OpenAI GPT models
 - **Vector Store**: FAISS 
-- **Storage**: Local filesystem + Google Cloud Storage
 - **Package Manager**: uv
 - **Frameworks**: Langchain, DeepEval, MLflow
 - **Evaluation**: Multi-modal evaluation with DeepEval metrics
@@ -48,29 +45,20 @@ ragchain-chatbot/
 │       │   ├── app_config.py              # Application configuration loader
 │       │   └── manager.py                 # Configuration manager utilities
 │       └── pipeline/                      # Data pipeline utilities
-│           ├── data_version_manager.py    # Data versioning and lineage tracking
 │           ├── mlflow_tracker.py          # MLflow experiment tracking
 │           └── vectorstore_manager.py     # Vector store operations and management
 ├── evaluation/                            # Evaluation framework
 ├── scripts/                              # Utility scripts
 ├── configs/                              # Configuration files
-├── data/                                 # Data storage (auto-versioned)
+├── data/                                 # Data storage
 │   └── raw/                             # Raw text documents
-│       ├── latest -> vX.X              # Symlink to latest version
-│       └── vX.X/                       # Version directories
-└── artifacts/                           # Generated indexes (auto-versioned)
-    ├── latest -> vX.X                   # Symlink to latest index (auto-created)
-    └── vX.X/                            # Index version directories (auto-created)
+└── artifacts/                           # Generated FAISS indexes
 ```
 
 ### 🔄 Data Flow Architecture
 
 ```
 📝 Raw Text Files (.txt)
-    ⬇️
-📦 Data Version Manager
-    ⬇️ (creates versioned directories)
-📂 data/raw/v1.X/
     ⬇️
 🔨 Data Ingestion Pipeline
     ⬇️ (loads & chunks documents)
@@ -79,8 +67,8 @@ ragchain-chatbot/
 🤖 OpenAI Embeddings
     ⬇️ (generates vector embeddings)
 🗂️ FAISS Vector Store
-    ⬇️ (saves to artifacts/vX.X/)
-💾 artifacts/latest/faiss_product_index/
+    ⬇️ (saves to artifacts/)
+💾 artifacts/faiss_product_index/
     ⬇️
 🤖 RAG Chain Runner
     ⬇️ (retrieval + generation)
@@ -101,9 +89,8 @@ uv sync
 
 # 2. Configure API key in configs/model_config.yaml
 # 3. Add your .txt files to data/raw/
-# 4. Create data version and build index
-python scripts/create_data_version.py --files data/raw/*.txt --inc minor
-python scripts/build_faiss_index.py --data-version latest --use-semantic-chunking
+# 4. Build index
+python scripts/build_faiss_index.py --use-semantic-chunking
 
 # 5. Run the chatbot
 python -m src.components.ragchain
@@ -115,13 +102,8 @@ python -m src.components.ragchain
 
 ### Essential Guides
 - **🚀 [Quick Start Guide](docs/quickstart.md)** - Get running in 5 minutes
-- **☁️ [GCS Setup](docs/gcs_setup.md)** - Production storage setup
 - **📊 [System Evaluation](docs/evaluation.md)** - System evaluation framework
 - **📝 [Prompt Management](docs/prompts.md)** - Prompt templates and versioning
-
-## 🔄 What's New
-
-**Auto Index Versioning**: Index directories now automatically sync with data versions! No more manual directory creation.
 
 ## 💡 System Requirements & Configuration
 

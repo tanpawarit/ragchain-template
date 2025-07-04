@@ -123,5 +123,4 @@ Create a JSON file with the following format:
 
 - **[Quick Start](quickstart.md)** - Set up your system before evaluation
 - **[Prompt Management](prompts.md)** - Optimize prompts based on evaluation results
-- **[GCS Setup](gcs_setup.md)** - Production monitoring and logging
 - **[Complete Documentation](README.md)** - Return to documentation overview 

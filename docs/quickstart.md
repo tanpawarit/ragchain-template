@@ -9,7 +9,7 @@ Get RAG-Chain Chatbot up and running in 5 minutes.
 - OpenAI API key (must have credits)
 - 4GB+ available RAM
 
-## Setup for New Projects (No existing data versions or indexes)
+## Setup
 
 ### 1. Installation & Environment Setup
 
@@ -47,45 +47,20 @@ Add your data files to the `data/raw/` directory:
 - **File Size**: Recommended < 10MB per file
 - **Number of Files**: Unlimited, but start with 2-5 files
 
-### 4. Create Data Version
+### 4. Build FAISS Index
 
 ```bash
-# Create first data version from your files
-python scripts/create_data_version.py --files data/raw/*.txt --inc minor
+# Build FAISS index with semantic chunking
+python scripts/build_faiss_index.py --use-semantic-chunking
 
-# Or specify files explicitly:
-# python scripts/create_data_version.py --files data/raw/workshop.txt data/raw/rerun.txt data/raw/overall.txt --inc minor
+# Or with character-based chunking
+python scripts/build_faiss_index.py --chunk-size 1000 --chunk-overlap 200
 ```
 
-### 5. Build FAISS Index
-
-```bash
-# Build FAISS index (index directories will be created automatically)
-python scripts/build_faiss_index.py --data-version latest --use-semantic-chunking
-```
-
-### 6. Run the Chatbot
+### 5. Run the Chatbot
 
 ```bash
 # Start the interactive chatbot
-python -m src.components.ragchain
-```
-
-## Setup for Projects with Existing Data
-
-### Quick Setup
-
-```bash
-# 1. Activate environment
-source .venv/bin/activate  # or uv sync
-
-# 2. Create new data version from existing files
-python scripts/create_data_version.py --files data/raw/*.txt --inc minor
-
-# 3. Build FAISS index
-python scripts/build_faiss_index.py --data-version latest --use-semantic-chunking
-
-# 4. Run the chatbot
 python -m src.components.ragchain
 ```
 
@@ -119,12 +94,11 @@ mlflow:
 ## Next Steps
 
 ### Customize Your System
-- **📝 [Prompt Management](prompts.md)** - Customize AI responses and prompt templates
-- **📊 [System Evaluation](evaluation.md)** - Test and monitor your RAG system performance
+- **[Prompt Management](prompts.md)** - Customize AI responses and prompt templates
+- **[System Evaluation](evaluation.md)** - Test and monitor your RAG system performance
 
-### Production Deployment  
-- **☁️ [GCS Setup](gcs_setup.md)** - Scale with Google Cloud Storage
-- **📚 [Complete Documentation](README.md)** - Explore all features and guides
+### Advanced Features
+- **[Complete Documentation](README.md)** - Explore all features and guides
 
 ## Troubleshooting
 
