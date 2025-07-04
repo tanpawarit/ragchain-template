@@ -194,5 +194,15 @@ This template is designed to grow with your needs. Consider implementing these e
 
 ---
 
+## 📝 About This Project
+
+This RAG-Chain template was designed and implemented from the ground up to provide a production-ready foundation for specialized chatbot development. Every component has been carefully crafted with extensibility and best practices in mind.
+
+**Created by:** Pawarison Tanyu
+**Project Type:** Original implementation  
+**Purpose:** Production-ready RAG template for enterprise applications
+
+---
+
 *"A meticulously designed RAG template that accelerates development from prototype to production. Built with extensibility and best practices in mind."*
  
