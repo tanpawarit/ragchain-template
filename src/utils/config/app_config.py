@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from src.prompts.prompt_manager import PromptManager
 from src.utils.config.manager import get_config
@@ -38,6 +38,7 @@ class AppConfig:
     prompt_template: str
     prompt_template_name: str
     prompt_template_version: Optional[str]
+    guardrails_config: Dict[str, Any]
 
     # ---------------------------------------------------------------------
     # Construction helpers
@@ -80,6 +81,9 @@ class AppConfig:
             # Fallback to legacy template format
             prompt_template = model_cfg.get("template", "")
 
+        # Load guardrails config
+        guardrails_config = model_cfg.get("guardrails", {"enabled": False})
+
         return cls(
             embedding_model_name=model_cfg["models"]["embedding"],
             llm_model_name=model_cfg["models"]["llm"],
@@ -92,22 +96,5 @@ class AppConfig:
             prompt_template=prompt_template,
             prompt_template_name=prompt_template_name,
             prompt_template_version=prompt_template_version,
+            guardrails_config=guardrails_config,
         )
-
-    # Convenience pretty-print ------------------------------------------------
-    def __repr__(self) -> str:  # debug helper
-        attrs = (
-            "embedding_model_name",
-            "llm_model_name",
-            "data_folder",
-            "file_names",
-            "faiss_index_path",
-            "retriever_search_type",
-            "retriever_k_value",
-            "openai_token",
-            "prompt_template",
-            "prompt_template_name",
-            "prompt_template_version",
-        )
-        joined = ", ".join(f"{a}={getattr(self, a)!r}" for a in attrs)
-        return f"{self.__class__.__name__}({joined})"

@@ -18,3 +18,41 @@ retriever:
 prompt_config:
   template_name: "sales_support"
   version: "v1"
+
+# Guardrails configuration
+guardrails:
+  enabled: true
+  
+  # Input validation settings
+  input_validation:
+    enabled: true
+    max_length: 1000
+    min_length: 1
+    check_prompt_injection: true
+    prompt_injection_threshold: 0.8
+    check_profanity: true
+    profanity_severity: "warning"  # "warning" or "fail"
+    allowed_languages: ["th", "en"]
+  
+  # Content safety settings
+  content_safety:
+    enabled: true
+    toxicity_threshold: 0.7
+    hate_speech_threshold: 0.8
+    
+  # PII detection settings
+  pii_detection:
+    enabled: true
+    mask_pii: true
+    fail_on_pii: false  # Set to true for stricter PII handling
+    allowed_pii_types: []  # Add allowed PII types if needed
+    
+  # Output validation settings
+  output_validation:
+    enabled: true
+    max_response_length: 2000
+    min_response_length: 5
+    check_relevance: true
+    relevance_threshold: 0.6
+    check_hallucination: true
+    hallucination_threshold: 0.8

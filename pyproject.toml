@@ -22,12 +22,16 @@ dependencies = [
     "pyyaml>=6.0.2",
     "pandas>=2.0.0",
     "scipy>=1.10.0",
+    # NLP Libraries for Guardrails
+    "pythainlp>=4.0.0",
+    "spacy>=3.7.0",
     # Validation & Utils
     "pydantic>=2.0.0",
     "tqdm>=4.65.0",
     # Experiment Tracking
     "mlflow>=3.0.0rc0",
     "deepeval>=3.2.1",
+    "pip>=25.1.1",
 ]
 
 [project.optional-dependencies]
@@ -39,6 +43,11 @@ evaluation = [
 # Cloud storage (optional)
 gcs = [
     "google-cloud-storage>=2.0.0",
+]
+
+# NLP models (optional)
+nlp = [
+    "spacy[th]>=3.7.0",  # Thai language model for spacy
 ]
 
 [dependency-groups]
