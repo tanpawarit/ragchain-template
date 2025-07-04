@@ -9,7 +9,7 @@ A production-ready RAG template for building specialized chatbots with advanced 
 
 ## Core Capabilities
 
-### Multilingual NLP
+### Multilingual NLP in Guardrails
 - **Thai & English Support**: Using pythainlp and spacy with word vectors
 - **Smart Text Processing**: Language detection and semantic similarity
 - **Enhanced Guardrails**: Relevance checking and hallucination detection for safer responses
