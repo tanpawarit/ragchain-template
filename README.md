@@ -13,8 +13,7 @@ A simple and production-ready Retrieval-Augmented Generation (RAG) chatbot syste
 - **🤖 Simple RAG System**: Complete ingestion, chunking, embedding, and retrieval system
 - **📝 Prompt Management**: YAML-based prompt templates with version control
 - **📈 MLflow Integration**: Experiment tracking and logging
-- **🧪 Multi-Modal Evaluation**: Retriever, generator, and end-to-end evaluation with DeepEval
-- **🌏 Thai Language Support**: Optimized for both Thai and English content
+- **🧪 DeepEval Integration**: Retriever, generator, and end-to-end evaluation with DeepEval 
 - **⚡ Easy Setup**: Simplified configuration and deployment
 
 ## 🛠️ Tech Stack

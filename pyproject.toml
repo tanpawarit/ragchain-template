@@ -5,26 +5,38 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "faiss-cpu>=1.11.0",
+    # Core ML/AI Libraries
+    "openai>=1.86.0",
+    "numpy>=2.3.1",
+    "torch>=2.7.1",
+    "sentence-transformers>=5.0.0",
+    # LangChain Ecosystem
     "langchain>=0.3.25",
     "langchain-community>=0.3.25",
+    "langchain-core>=0.3.25",
     "langchain-experimental>=0.3.4",
     "langchain-openai>=0.3.23",
-    "nest-asyncio>=1.6.0",
-    "openai>=1.86.0",
-    "playwright>=1.52.0",
-    "tiktoken>=0.9.0",
-    "trafilatura>=2.0.0",
-    "mlflow>=3.0.0rc0",
-    "deepeval>=0.20.4",
-    "chromadb>=1.0.12",
+    # Vector Database
+    "faiss-cpu>=1.11.0",
+    # Data Processing & Config
     "pyyaml>=6.0.2",
-    "numpy>=2.3.1",
-    "sentence-transformers>=5.0.0",
-    "torch>=2.7.1",
+    "pandas>=2.0.0",
+    "scipy>=1.10.0",
+    # Validation & Utils
+    "pydantic>=2.0.0",
+    "tqdm>=4.65.0",
+    # Experiment Tracking
+    "mlflow>=3.0.0rc0",
+    "deepeval>=3.2.1",
 ]
 
 [project.optional-dependencies]
+# Evaluation dependencies (optional)
+evaluation = [
+    "deepeval>=0.20.4",
+]
+
+# Cloud storage (optional)
 gcs = [
     "google-cloud-storage>=2.0.0",
 ]
