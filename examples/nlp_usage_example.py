@@ -12,6 +12,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+# Import all required modules
+# ruff: noqa: E402
 from typing import Any, Dict
 
 from src.guardrails.validators.output_validators import (
@@ -23,7 +25,6 @@ from src.utils.nlp_utils import (
     calculate_similarity,
     detect_language,
     get_keywords,
-    get_nlp_processor,
     tokenize,
 )
 
@@ -31,9 +32,6 @@ from src.utils.nlp_utils import (
 def demonstrate_nlp_features() -> None:
     """Demonstrate basic NLP features."""
     print("=== NLP Features Demonstration ===\n")
-
-    # Initialize NLP processor
-    nlp = get_nlp_processor()
 
     # Test language detection
     print("1. Language Detection:")
@@ -170,8 +168,6 @@ def demonstrate_performance_comparison() -> None:
     # Test text
     thai_text = "สวัสดีครับ ผมชื่อสมชาย และผมทำงานเป็นโปรแกรมเมอร์ที่บริษัทเทคโนโลยีแห่งหนึ่ง ผมชอบการเขียนโค้ดและเรียนรู้เทคโนโลยีใหม่ๆ"
     english_text = "Hello, my name is John and I work as a programmer at a technology company. I enjoy coding and learning new technologies."
-
-    nlp = get_nlp_processor()
 
     print("1. Thai Text Processing:")
     print(f"   Original text: {thai_text}")
