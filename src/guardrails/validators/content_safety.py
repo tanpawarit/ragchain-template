@@ -8,10 +8,42 @@ or inappropriate content in both inputs and outputs.
 import re
 from typing import Any, Dict, List
 
-from src.guardrails.base import BaseGuardrail, GuardrailResponse, GuardrailResult
+from pydantic import Field
+
+from src.guardrails.base import (
+    BaseGuardrail,
+    BaseGuardrailConfig,
+    GuardrailResponse,
+    GuardrailResult,
+)
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+class ToxicityConfig(BaseGuardrailConfig):
+    """Configuration for toxicity validator."""
+
+    threshold: float = Field(
+        default=0.7, ge=0.0, le=1.0, description="Toxicity detection threshold"
+    )
+    patterns: List[str] = Field(
+        default=[
+            # Violence and threats
+            r"\b(kill|murder|die|death|hurt|harm|violence|attack)\b",
+            r"\b(threat|threaten|revenge|destroy)\b",
+            # Self-harm
+            r"\b(suicide|self.harm|cut.myself|end.my.life)\b",
+            # Harassment
+            r"\b(stupid|idiot|loser|worthless|pathetic)\b",
+            r"\b(shut.up|go.away|leave.me.alone)\b",
+            # Thai toxic patterns
+            r"\b(ตาย|ฆ่า|ทำร้าย|ทำลาย)\b",
+            r"\b(โง่|ปัญญาอ่อน|ไร้ค่า|น่าเกลียด)\b",
+            r"\b(หุบปาก|ไปให้พ้น|เลิกมาเยอะ)\b",
+        ],
+        description="Regex patterns to detect toxic content",
+    )
 
 
 class ToxicityValidator(BaseGuardrail):
@@ -23,28 +55,13 @@ class ToxicityValidator(BaseGuardrail):
     like Perspective API or similar services.
     """
 
+    guardrail_name = "ToxicityValidator"
+
     def __init__(self, config: Dict[str, Any]) -> None:
         super().__init__(config)
-        self.toxicity_threshold = config.get("threshold", 0.7)
-
-        # Basic toxic patterns (this should be expanded for production use)
-        self.toxic_patterns = config.get(
-            "patterns",
-            [
-                # Violence and threats
-                r"\b(kill|murder|die|death|hurt|harm|violence|attack)\b",
-                r"\b(threat|threaten|revenge|destroy)\b",
-                # Self-harm
-                r"\b(suicide|self.harm|cut.myself|end.my.life)\b",
-                # Harassment
-                r"\b(stupid|idiot|loser|worthless|pathetic)\b",
-                r"\b(shut.up|go.away|leave.me.alone)\b",
-                # Thai toxic patterns
-                r"\b(ตาย|ฆ่า|ทำร้าย|ทำลาย)\b",
-                r"\b(โง่|ปัญญาอ่อน|ไร้ค่า|น่าเกลียด)\b",
-                r"\b(หุบปาก|ไปให้พ้น|เลิกมาเยอะ)\b",
-            ],
-        )
+        self.config_model = ToxicityConfig(**config)
+        self.toxicity_threshold = self.config_model.threshold
+        self.toxic_patterns = self.config_model.patterns
 
         self.severity_weights = {
             "violence": 1.0,
@@ -52,10 +69,6 @@ class ToxicityValidator(BaseGuardrail):
             "self_harm": 1.0,
             "general_toxicity": 0.5,
         }
-
-    @property
-    def name(self) -> str:
-        return "ToxicityValidator"
 
     def validate(self, input_data: str) -> GuardrailResponse:
         """
@@ -128,6 +141,48 @@ class ToxicityValidator(BaseGuardrail):
             return 0.5
 
 
+class HateSpeechConfig(BaseGuardrailConfig):
+    """Configuration for hate speech validator."""
+
+    threshold: float = Field(
+        default=0.8, ge=0.0, le=1.0, description="Hate speech detection threshold"
+    )
+    patterns: List[str] = Field(
+        default=[
+            # Racial/ethnic slurs and discrimination
+            # Note: In production, these patterns should be more comprehensive
+            # and regularly updated based on emerging hate speech trends
+            # General discriminatory language
+            r"\b(hate|despise|disgust).*(race|ethnicity|religion|gender|sexual)\b",
+            r"\b(inferior|superior).*(race|ethnicity|people|group)\b",
+            # Targeting based on characteristics
+            r"\b(all|those).*(people|men|women).*(are|should).*(bad|evil|wrong)\b",
+            # Thai hate speech patterns
+            r"\b(เกลียด|รังเกียจ).*(เชื้อชาติ|ศาสนา|เพศ)\b",
+            r"\b(ด้อยกว่า|เหนือกว่า).*(คน|กลุ่ม|เชื้อชาติ)\b",
+        ],
+        description="Regex patterns to detect hate speech",
+    )
+    protected_characteristics: List[str] = Field(
+        default=[
+            "race",
+            "ethnicity",
+            "religion",
+            "gender",
+            "sexual orientation",
+            "disability",
+            "age",
+            "nationality",
+            "เชื้อชาติ",
+            "ศาสนา",
+            "เพศ",
+            "อายุ",
+            "สัญชาติ",
+        ],
+        description="Protected characteristics to monitor",
+    )
+
+
 class HateSpeechValidator(BaseGuardrail):
     """
     Detects hate speech and discriminatory content.
@@ -136,51 +191,14 @@ class HateSpeechValidator(BaseGuardrail):
     based on protected characteristics.
     """
 
+    guardrail_name = "HateSpeechValidator"
+
     def __init__(self, config: Dict[str, Any]) -> None:
         super().__init__(config)
-        self.hate_threshold = config.get("threshold", 0.8)
-
-        # Hate speech patterns (basic implementation)
-        self.hate_patterns = config.get(
-            "patterns",
-            [
-                # Racial/ethnic slurs and discrimination
-                # Note: In production, these patterns should be more comprehensive
-                # and regularly updated based on emerging hate speech trends
-                # General discriminatory language
-                r"\b(hate|despise|disgust).*(race|ethnicity|religion|gender|sexual)\b",
-                r"\b(inferior|superior).*(race|ethnicity|people|group)\b",
-                # Targeting based on characteristics
-                r"\b(all|those).*(people|men|women).*(are|should).*(bad|evil|wrong)\b",
-                # Thai hate speech patterns
-                r"\b(เกลียด|รังเกียจ).*(เชื้อชาติ|ศาสนา|เพศ)\b",
-                r"\b(ด้อยกว่า|เหนือกว่า).*(คน|กลุ่ม|เชื้อชาติ)\b",
-            ],
-        )
-
-        # Protected characteristics to monitor
-        self.protected_characteristics = config.get(
-            "protected_characteristics",
-            [
-                "race",
-                "ethnicity",
-                "religion",
-                "gender",
-                "sexual orientation",
-                "disability",
-                "age",
-                "nationality",
-                "เชื้อชาติ",
-                "ศาสนา",
-                "เพศ",
-                "อายุ",
-                "สัญชาติ",
-            ],
-        )
-
-    @property
-    def name(self) -> str:
-        return "HateSpeechValidator"
+        self.config_model = HateSpeechConfig(**config)
+        self.hate_threshold = self.config_model.threshold
+        self.hate_patterns = self.config_model.patterns
+        self.protected_characteristics = self.config_model.protected_characteristics
 
     def validate(self, input_data: str) -> GuardrailResponse:
         """
@@ -210,30 +228,25 @@ class HateSpeechValidator(BaseGuardrail):
 
         # Check for targeting of protected characteristics
         for characteristic in self.protected_characteristics:
-            if characteristic.lower() in text:
+            if characteristic in text:
                 targeted_characteristics.append(characteristic)
 
-        # Calculate hate speech score
-        hate_score = self._calculate_hate_score(
-            detected_patterns, targeted_characteristics
-        )
+        if detected_patterns or targeted_characteristics:
+            hate_score = self._calculate_hate_score(
+                detected_patterns, targeted_characteristics
+            )
 
-        if detected_patterns and hate_score >= self.hate_threshold:
+            if hate_score >= self.hate_threshold:
+                result = GuardrailResult.FAIL
+                message = "Hate speech detected"
+            else:
+                result = GuardrailResult.WARNING
+                message = "Potentially discriminatory content detected"
+
             logger.warning(f"Hate speech detected: {detected_patterns}")
             return GuardrailResponse(
-                result=GuardrailResult.FAIL,
-                message="Hate speech detected",
-                confidence=hate_score,
-                metadata={
-                    "detected_patterns": detected_patterns,
-                    "targeted_characteristics": targeted_characteristics,
-                    "hate_score": hate_score,
-                },
-            )
-        elif detected_patterns or (targeted_characteristics and hate_score > 0.3):
-            return GuardrailResponse(
-                result=GuardrailResult.WARNING,
-                message="Potentially discriminatory content detected",
+                result=result,
+                message=message,
                 confidence=hate_score,
                 metadata={
                     "detected_patterns": detected_patterns,
@@ -252,21 +265,22 @@ class HateSpeechValidator(BaseGuardrail):
         self, patterns: List[str], characteristics: List[str]
     ) -> float:
         """
-        Calculate hate speech score based on detected patterns and characteristics.
+        Calculate hate speech severity score.
 
-        This is a simple implementation. For production use, consider using
-        more sophisticated hate speech detection models.
+        Args:
+            patterns: Detected hate speech patterns
+            characteristics: Targeted protected characteristics
+
+        Returns:
+            Hate speech score between 0 and 1
         """
-        if not patterns and not characteristics:
-            return 0.0
+        # Base score from pattern detection
+        pattern_score = min(len(patterns) * 0.3, 1.0)
 
-        # Base score for patterns
-        pattern_score = min(len(patterns) * 0.3, 0.8)
-
-        # Additional score for targeting protected characteristics
+        # Additional score from targeting protected characteristics
         characteristic_score = min(len(characteristics) * 0.2, 0.5)
 
         # Combine scores
-        total_score = min(pattern_score + characteristic_score, 1.0)
+        total_score = pattern_score + characteristic_score
 
-        return total_score
+        return min(total_score, 1.0)

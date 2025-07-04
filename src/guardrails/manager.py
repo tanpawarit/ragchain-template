@@ -7,7 +7,7 @@ for the RAG system, providing a unified interface for validation checks.
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from src.guardrails.base import BaseGuardrail, GuardrailResponse
 from src.guardrails.validators.content_safety import (
@@ -84,8 +84,9 @@ class GuardrailManagerConfig(BaseModel):
     content_safety: ContentSafetyConfig = Field(default_factory=ContentSafetyConfig)
     pii_detection: PIIDetectionConfig = Field(default_factory=PIIDetectionConfig)
 
-    class Config:
-        extra = "allow"  # Allow additional fields for extensibility
+    model_config = ConfigDict(
+        extra="allow"
+    )  # Allow additional fields for extensibility
 
 
 class GuardrailManager:

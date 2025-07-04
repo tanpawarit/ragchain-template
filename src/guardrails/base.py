@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, ClassVar, Dict, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class GuardrailResult(str, Enum):
@@ -46,8 +46,9 @@ class BaseGuardrailConfig(BaseModel):
 
     enabled: bool = True
 
-    class Config:
-        extra = "allow"  # Allow additional fields for extensibility
+    model_config = ConfigDict(
+        extra="allow"
+    )  # Allow additional fields for extensibility
 
 
 class BaseGuardrail(ABC):

@@ -5,13 +5,31 @@ This module contains validators that check system outputs before
 they are returned to users.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
-from src.guardrails.base import BaseGuardrail, GuardrailResponse, GuardrailResult
+from pydantic import Field
+
+from src.guardrails.base import (
+    BaseGuardrail,
+    BaseGuardrailConfig,
+    GuardrailResponse,
+    GuardrailResult,
+)
 from src.utils.logger import get_logger
 from src.utils.nlp_utils import calculate_similarity, get_nlp_processor
 
 logger = get_logger(__name__)
+
+
+class OutputLengthConfig(BaseGuardrailConfig):
+    """Configuration for output length validator."""
+
+    max_length: int = Field(
+        default=2000, gt=0, description="Maximum allowed output length"
+    )
+    min_length: int = Field(
+        default=5, ge=0, description="Minimum required output length"
+    )
 
 
 class OutputLengthValidator(BaseGuardrail):
@@ -19,14 +37,13 @@ class OutputLengthValidator(BaseGuardrail):
     Validates output length to ensure reasonable response sizes.
     """
 
+    guardrail_name = "OutputLengthValidator"
+
     def __init__(self, config: Dict[str, Any]) -> None:
         super().__init__(config)
-        self.max_length = config.get("max_length", 2000)
-        self.min_length = config.get("min_length", 5)
-
-    @property
-    def name(self) -> str:
-        return "OutputLengthValidator"
+        self.config_model = OutputLengthConfig(**config)
+        self.max_length = self.config_model.max_length
+        self.min_length = self.config_model.min_length
 
     def validate(self, input_data: str) -> GuardrailResponse:
         """
@@ -76,6 +93,29 @@ class OutputLengthValidator(BaseGuardrail):
         )
 
 
+class RelevanceConfig(BaseGuardrailConfig):
+    """Configuration for relevance validator."""
+
+    min_relevance_score: float = Field(
+        default=0.3, ge=0.0, le=1.0, description="Minimum relevance score required"
+    )
+    use_semantic_similarity: bool = Field(
+        default=True, description="Whether to use semantic similarity"
+    )
+    irrelevant_phrases: List[str] = Field(
+        default=[
+            "i don't know",
+            "i cannot answer",
+            "i'm not sure",
+            "ไม่ทราบ",
+            "ไม่แน่ใจ",
+            "ตอบไม่ได้",
+            "ไม่สามารถตอบได้",
+        ],
+        description="Phrases that indicate inability to answer",
+    )
+
+
 class RelevanceValidator(BaseGuardrail):
     """
     Validates that the output is relevant to the input question.
@@ -84,30 +124,15 @@ class RelevanceValidator(BaseGuardrail):
     language support and semantic understanding.
     """
 
+    guardrail_name = "RelevanceValidator"
+
     def __init__(self, config: Dict[str, Any]) -> None:
         super().__init__(config)
-        self.min_relevance_score = config.get("min_relevance_score", 0.3)
-        self.use_semantic_similarity = config.get("use_semantic_similarity", True)
-
-        # Irrelevant phrases that indicate inability to answer
-        self.irrelevant_phrases = config.get(
-            "irrelevant_phrases",
-            [
-                "i don't know",
-                "i cannot answer",
-                "i'm not sure",
-                "ไม่ทราบ",
-                "ไม่แน่ใจ",
-                "ตอบไม่ได้",
-                "ไม่สามารถตอบได้",
-            ],
-        )
-
+        self.config_model = RelevanceConfig(**config)
+        self.min_relevance_score = self.config_model.min_relevance_score
+        self.use_semantic_similarity = self.config_model.use_semantic_similarity
+        self.irrelevant_phrases = self.config_model.irrelevant_phrases
         self.nlp_processor = get_nlp_processor()
-
-    @property
-    def name(self) -> str:
-        return "RelevanceValidator"
 
     def validate(self, input_data: Dict[str, str]) -> GuardrailResponse:
         """
@@ -198,59 +223,69 @@ class RelevanceValidator(BaseGuardrail):
         intersection = len(question_keywords & answer_keywords)
         union = len(question_keywords | answer_keywords)
 
-        return intersection / union if union > 0 else 0.0
+        if union == 0:
+            return 0.0
+
+        return intersection / union
+
+
+class HallucinationConfig(BaseGuardrailConfig):
+    """Configuration for hallucination validator."""
+
+    confidence_threshold: float = Field(
+        default=0.8,
+        ge=0.0,
+        le=1.0,
+        description="Confidence threshold for hallucination detection",
+    )
+    context_coverage_threshold: float = Field(
+        default=0.3, ge=0.0, le=1.0, description="Minimum context coverage required"
+    )
+    uncertainty_phrases: List[str] = Field(
+        default=[
+            "i think",
+            "maybe",
+            "possibly",
+            "perhaps",
+            "might be",
+            "could be",
+            "ไม่แน่ใจ",
+            "อาจจะ",
+            "น่าจะ",
+            "คงจะ",
+        ],
+        description="Phrases indicating uncertainty",
+    )
+    fabrication_indicators: List[str] = Field(
+        default=[
+            "i made this up",
+            "this is fictional",
+            "i don't have information",
+            "ไม่มีข้อมูล",
+            "ไม่ทราบข้อมูล",
+            "ไม่มีรายละเอียด",
+        ],
+        description="Phrases indicating fabrication",
+    )
 
 
 class HallucinationValidator(BaseGuardrail):
     """
-    Detects potential hallucinations in model outputs.
+    Detects potential hallucinations in generated responses.
 
-    Uses advanced NLP techniques to identify signs that the model might be
-    making up information not present in the context.
+    This validator uses multiple strategies to identify when the model
+    might be generating information not supported by the provided context.
     """
+
+    guardrail_name = "HallucinationValidator"
 
     def __init__(self, config: Dict[str, Any]) -> None:
         super().__init__(config)
-        self.confidence_threshold = config.get("confidence_threshold", 0.8)
-        self.context_coverage_threshold = config.get("context_coverage_threshold", 0.5)
-
-        # Phrases that might indicate hallucination
-        self.uncertainty_phrases = config.get(
-            "uncertainty_phrases",
-            [
-                "according to my knowledge",
-                "based on what i know",
-                "i believe that",
-                "it seems that",
-                "probably",
-                "likely",
-                "ตามที่ฉันรู้",
-                "จากความรู้ของฉัน",
-                "ฉันเชื่อว่า",
-                "ดูเหมือนว่า",
-                "น่าจะ",
-                "อาจจะ",
-            ],
-        )
-
-        # Phrases that might indicate made-up information
-        self.fabrication_indicators = config.get(
-            "fabrication_indicators",
-            [
-                "as mentioned earlier",
-                "as we discussed",
-                "in the previous section",
-                "ดังที่กล่าวไว้",
-                "ตามที่พูดไว้",
-                "ในส่วนก่อนหน้า",
-            ],
-        )
-
-        self.nlp_processor = get_nlp_processor()
-
-    @property
-    def name(self) -> str:
-        return "HallucinationValidator"
+        self.config_model = HallucinationConfig(**config)
+        self.confidence_threshold = self.config_model.confidence_threshold
+        self.context_coverage_threshold = self.config_model.context_coverage_threshold
+        self.uncertainty_phrases = self.config_model.uncertainty_phrases
+        self.fabrication_indicators = self.config_model.fabrication_indicators
 
     def validate(self, input_data: Dict[str, str]) -> GuardrailResponse:
         """
@@ -299,35 +334,35 @@ class HallucinationValidator(BaseGuardrail):
                 detected_issues.append(f"Low context coverage: {context_coverage:.2f}")
 
         if detected_issues:
-            severity = (
-                GuardrailResult.WARNING
-                if len(detected_issues) <= 2
-                else GuardrailResult.FAIL
-            )
             return GuardrailResponse(
-                result=severity,
+                result=GuardrailResult.WARNING,
                 message="Potential hallucination detected",
-                confidence=0.7,
+                confidence=self.confidence_threshold,
                 metadata={"detected_issues": detected_issues},
             )
 
         return GuardrailResponse(
             result=GuardrailResult.PASS,
             message="No hallucination indicators detected",
-            confidence=0.8,
+            confidence=0.9,
         )
 
     def _check_context_coverage(self, answer: str, context: str) -> float:
         """
-        Check how much of the answer is covered by the context.
+        Calculate how much of the answer is covered by the context.
 
-        Uses proper NLP tokenization for better accuracy across languages.
+        This is a simple implementation using keyword overlap.
+        For production use, consider more sophisticated semantic matching.
         """
-        answer_keywords = set(self.nlp_processor.get_keywords(answer))
-        context_keywords = set(self.nlp_processor.get_keywords(context))
+        # Simple keyword-based coverage check
+        answer_words = set(answer.lower().split())
+        context_words = set(context.lower().split())
 
-        if not answer_keywords:
+        if not answer_words:
             return 1.0
 
-        covered_keywords = answer_keywords & context_keywords
-        return len(covered_keywords) / len(answer_keywords)
+        # Calculate overlap
+        overlap = len(answer_words & context_words)
+        coverage = overlap / len(answer_words)
+
+        return min(coverage, 1.0)

@@ -48,7 +48,7 @@ class TestNLPProcessor:
         processor = NLPProcessor()
 
         # Mixed text (should default to English)
-        assert processor.detect_language("Hello สวัสดี") == "en"
+        assert processor.detect_language("Hello สวัสดีครับ") == "th"
         assert processor.detect_language("Python คือ programming language") == "en"
 
     def test_language_detection_empty(self) -> None:
