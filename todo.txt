@@ -1,5 +1,5 @@
 - Implement LLM memory
-- Implement guardrail
+- Implement guardrail พื้นฐาน
 - llm caching
 - อธิบายการทำงาน symlink script
 - Set Evaluation Folder Script
