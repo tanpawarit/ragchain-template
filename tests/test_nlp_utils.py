@@ -4,7 +4,7 @@ Tests for NLP utilities using pythainlp and spacy.
 
 import pytest
 
-from src.utils.nlp_utils import (
+from src.guardrails.nlp_utils import (
     NLPProcessor,
     calculate_similarity,
     detect_language,

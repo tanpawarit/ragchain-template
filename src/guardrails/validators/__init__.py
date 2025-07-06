@@ -14,6 +14,7 @@ from .content_safety import (
 )
 from .input_validators import (
     InputLengthValidator,
+    NLPEnhancedProfanityValidator,
     ProfanityValidator,
     PromptInjectionValidator,
 )
@@ -29,6 +30,7 @@ __all__ = [
     "PromptInjectionValidator",
     "InputLengthValidator",
     "ProfanityValidator",
+    "NLPEnhancedProfanityValidator",
     # Output validators
     "RelevanceValidator",
     "OutputLengthValidator",

@@ -16,16 +16,16 @@ sys.path.insert(0, str(project_root))
 # ruff: noqa: E402
 from typing import Any, Dict
 
-from src.guardrails.validators.output_validators import (
-    HallucinationValidator,
-    OutputLengthValidator,
-    RelevanceValidator,
-)
-from src.utils.nlp_utils import (
+from src.guardrails.nlp_utils import (
     calculate_similarity,
     detect_language,
     get_keywords,
     tokenize,
+)
+from src.guardrails.validators.output_validators import (
+    HallucinationValidator,
+    OutputLengthValidator,
+    RelevanceValidator,
 )
 
 

@@ -12,9 +12,26 @@ __version__ = "0.1.0"
 from .base import BaseGuardrail, GuardrailResponse, GuardrailResult
 from .manager import GuardrailManager
 
+# Import NLP utilities
+from .nlp_utils import (
+    NLPProcessor,
+    calculate_similarity,
+    detect_language,
+    get_keywords,
+    get_nlp_processor,
+    tokenize,
+)
+
 __all__ = [
     "GuardrailManager",
     "BaseGuardrail",
     "GuardrailResult",
     "GuardrailResponse",
+    # NLP utilities
+    "NLPProcessor",
+    "get_nlp_processor",
+    "detect_language",
+    "tokenize",
+    "get_keywords",
+    "calculate_similarity",
 ]

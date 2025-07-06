@@ -30,7 +30,7 @@ python -m spacy download th_core_news_sm
 ### Example
 
 ```python
-from src.utils.nlp_utils import get_nlp_processor, detect_language, tokenize, get_keywords, calculate_similarity
+from src.guardrails.nlp_utils import get_nlp_processor, detect_language, tokenize, get_keywords, calculate_similarity
 
 nlp = get_nlp_processor()
 print(detect_language("สวัสดีครับ"))  # 'th'

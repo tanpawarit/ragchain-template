@@ -6,7 +6,7 @@ or inappropriate content in both inputs and outputs.
 """
 
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Set
 
 from pydantic import Field
 
@@ -16,6 +16,7 @@ from src.guardrails.base import (
     GuardrailResponse,
     GuardrailResult,
 )
+from src.guardrails.nlp_utils import get_nlp_processor
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -48,11 +49,10 @@ class ToxicityConfig(BaseGuardrailConfig):
 
 class ToxicityValidator(BaseGuardrail):
     """
-    Detects toxic content in text.
+    Detects toxic content in text using NLP.
 
-    This is a basic implementation using pattern matching.
-    For production use, consider using specialized toxicity detection models
-    like Perspective API or similar services.
+    This validator uses NLP tokenization for better accuracy
+    across different languages including Thai and English.
     """
 
     guardrail_name = "ToxicityValidator"
@@ -62,6 +62,7 @@ class ToxicityValidator(BaseGuardrail):
         self.config_model = ToxicityConfig(**config)
         self.toxicity_threshold = self.config_model.threshold
         self.toxic_patterns = self.config_model.patterns
+        self.nlp_processor = get_nlp_processor()
 
         self.severity_weights = {
             "violence": 1.0,
@@ -72,7 +73,7 @@ class ToxicityValidator(BaseGuardrail):
 
     def validate(self, input_data: str) -> GuardrailResponse:
         """
-        Check for toxic content in the input.
+        Check for toxic content in the input using NLP.
 
         Args:
             input_data: Text to validate for toxicity
@@ -87,14 +88,16 @@ class ToxicityValidator(BaseGuardrail):
                 confidence=1.0,
             )
 
-        text = input_data.lower()
+        # ใช้ NLP processor ตรวจสอบ patterns
+        text_tokens = set(self.nlp_processor.tokenize(input_data.lower()))
         detected_patterns = []
         max_severity = 0.0
 
         for pattern in self.toxic_patterns:
-            if re.search(pattern, text, re.IGNORECASE):
+            # แปลง regex pattern เป็น tokens
+            pattern_tokens = self._extract_tokens_from_pattern(pattern)
+            if pattern_tokens.issubset(text_tokens):
                 detected_patterns.append(pattern)
-                # Simple severity scoring based on pattern type
                 severity = self._calculate_pattern_severity(pattern)
                 max_severity = max(max_severity, severity)
 
@@ -122,6 +125,21 @@ class ToxicityValidator(BaseGuardrail):
             message="No toxic content detected",
             confidence=0.9,
         )
+
+    def _extract_tokens_from_pattern(self, pattern: str) -> Set[str]:
+        """
+        Extract meaningful tokens from regex pattern.
+
+        Args:
+            pattern: Regex pattern string
+
+        Returns:
+            Set of tokens extracted from the pattern
+        """
+        # ลบ regex syntax และเอาเฉพาะคำสำคัญ
+        clean_pattern = re.sub(r"[\\\|\*\+\?\(\)\[\]\{\}\.\^\$]", " ", pattern)
+        clean_pattern = re.sub(r"\\b", " ", clean_pattern)  # Remove word boundaries
+        return set(self.nlp_processor.tokenize(clean_pattern.lower()))
 
     def _calculate_pattern_severity(self, pattern: str) -> float:
         """

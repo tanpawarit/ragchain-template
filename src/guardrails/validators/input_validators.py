@@ -6,7 +6,7 @@ they are processed by the RAG system.
 """
 
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Set
 
 from pydantic import Field
 
@@ -16,6 +16,7 @@ from src.guardrails.base import (
     GuardrailResponse,
     GuardrailResult,
 )
+from src.guardrails.nlp_utils import get_nlp_processor
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -250,3 +251,80 @@ class ProfanityValidator(BaseGuardrail):
             message="No inappropriate content detected",
             confidence=0.9,
         )
+
+
+class NLPEnhancedProfanityValidator(BaseGuardrail):
+    """
+    Enhanced profanity detection using NLP for better accuracy.
+
+    This validator uses NLP tokenization instead of simple regex matching
+    for more accurate detection across different languages.
+    """
+
+    guardrail_name = "NLPEnhancedProfanityValidator"
+
+    def __init__(self, config: Dict[str, Any]) -> None:
+        super().__init__(config)
+        self.config_model = ProfanityConfig(**config)
+        self.patterns = self.config_model.patterns
+        self.severity = self.config_model.severity
+        self.nlp_processor = get_nlp_processor()
+
+    def validate(self, input_data: str) -> GuardrailResponse:
+        """
+        Enhanced profanity detection using NLP tokenization.
+
+        Args:
+            input_data: User input string to validate
+
+        Returns:
+            GuardrailResponse with validation results
+        """
+        if not self.enabled or not input_data:
+            return GuardrailResponse(
+                result=GuardrailResult.PASS,
+                message="Validation skipped (disabled or empty input)",
+                confidence=1.0,
+            )
+
+        # ใช้ NLP tokenization แทน regex
+        text_tokens = set(self.nlp_processor.tokenize(input_data.lower()))
+        detected_patterns = []
+
+        for pattern in self.patterns:
+            pattern_tokens = self._extract_tokens_from_pattern(pattern)
+            if pattern_tokens.issubset(text_tokens):
+                detected_patterns.append(pattern)
+
+        if detected_patterns:
+            result = (
+                GuardrailResult.FAIL
+                if self.severity == "fail"
+                else GuardrailResult.WARNING
+            )
+            return GuardrailResponse(
+                result=result,
+                message="Profanity detected",
+                confidence=0.8,
+                metadata={"detected_patterns": detected_patterns},
+            )
+
+        return GuardrailResponse(
+            result=GuardrailResult.PASS,
+            message="No profanity detected",
+            confidence=0.9,
+        )
+
+    def _extract_tokens_from_pattern(self, pattern: str) -> Set[str]:
+        """
+        Extract tokens from regex pattern.
+
+        Args:
+            pattern: Regex pattern string
+
+        Returns:
+            Set of tokens extracted from the pattern
+        """
+        clean_pattern = re.sub(r"[\\\|\*\+\?\(\)\[\]\{\}\.\^\$]", " ", pattern)
+        clean_pattern = re.sub(r"\\b", " ", clean_pattern)  # Remove word boundaries
+        return set(self.nlp_processor.tokenize(clean_pattern.lower()))

@@ -15,8 +15,8 @@ from src.guardrails.base import (
     GuardrailResponse,
     GuardrailResult,
 )
+from src.guardrails.nlp_utils import get_nlp_processor
 from src.utils.logger import get_logger
-from src.utils.nlp_utils import calculate_similarity, get_nlp_processor
 
 logger = get_logger(__name__)
 
@@ -161,10 +161,11 @@ class RelevanceValidator(BaseGuardrail):
                 confidence=1.0,
             )
 
-        # Check for explicit irrelevant phrases
-        answer_lower = answer.lower()
+        # ใช้ NLP processor ตรวจสอบ irrelevant phrases
+        answer_tokens = set(self.nlp_processor.tokenize(answer.lower()))
         for phrase in self.irrelevant_phrases:
-            if phrase in answer_lower:
+            phrase_tokens = set(self.nlp_processor.tokenize(phrase.lower()))
+            if phrase_tokens.issubset(answer_tokens):
                 return GuardrailResponse(
                     result=GuardrailResult.FAIL,
                     message=f"Answer indicates inability to respond: '{phrase}'",
@@ -172,8 +173,8 @@ class RelevanceValidator(BaseGuardrail):
                     metadata={"detected_phrase": phrase},
                 )
 
-        # Calculate relevance score using advanced NLP
-        relevance_score = self._calculate_relevance_score(question, answer)
+        # ใช้ semantic similarity จาก spacy
+        relevance_score = self.nlp_processor.calculate_similarity(question, answer)
 
         if relevance_score < self.min_relevance_score:
             return GuardrailResponse(
@@ -189,44 +190,6 @@ class RelevanceValidator(BaseGuardrail):
             confidence=0.8,
             metadata={"relevance_score": relevance_score},
         )
-
-    def _calculate_relevance_score(self, question: str, answer: str) -> float:
-        """
-        Calculate relevance score using advanced NLP techniques.
-
-        Uses semantic similarity when available, falls back to keyword-based
-        similarity for better accuracy across languages.
-        """
-        if self.use_semantic_similarity:
-            # Try semantic similarity first (works well with spacy)
-            semantic_score = calculate_similarity(question, answer)
-            if semantic_score > 0:
-                return semantic_score
-
-        # Fallback to keyword-based relevance
-        return self._calculate_keyword_relevance(question, answer)
-
-    def _calculate_keyword_relevance(self, question: str, answer: str) -> float:
-        """
-        Calculate keyword-based relevance score using proper NLP tokenization.
-
-        Uses pythainlp for Thai and spacy for English with proper stop word removal.
-        """
-        # Get keywords using proper NLP tokenization
-        question_keywords = set(self.nlp_processor.get_keywords(question))
-        answer_keywords = set(self.nlp_processor.get_keywords(answer))
-
-        if not question_keywords:
-            return 1.0  # No keywords to match
-
-        # Calculate Jaccard similarity
-        intersection = len(question_keywords & answer_keywords)
-        union = len(question_keywords | answer_keywords)
-
-        if union == 0:
-            return 0.0
-
-        return intersection / union
 
 
 class HallucinationConfig(BaseGuardrailConfig):
@@ -286,6 +249,7 @@ class HallucinationValidator(BaseGuardrail):
         self.context_coverage_threshold = self.config_model.context_coverage_threshold
         self.uncertainty_phrases = self.config_model.uncertainty_phrases
         self.fabrication_indicators = self.config_model.fabrication_indicators
+        self.nlp_processor = get_nlp_processor()
 
     def validate(self, input_data: Dict[str, str]) -> GuardrailResponse:
         """
@@ -314,22 +278,26 @@ class HallucinationValidator(BaseGuardrail):
                 confidence=1.0,
             )
 
-        answer_lower = answer.lower()
         detected_issues = []
 
-        # Check for uncertainty phrases
+        # ใช้ NLP processor ตรวจสอบ phrases
+        answer_tokens = set(self.nlp_processor.tokenize(answer.lower()))
+
+        # ตรวจสอบ uncertainty phrases
         for phrase in self.uncertainty_phrases:
-            if phrase in answer_lower:
+            phrase_tokens = set(self.nlp_processor.tokenize(phrase.lower()))
+            if phrase_tokens.issubset(answer_tokens):
                 detected_issues.append(f"Uncertainty phrase: '{phrase}'")
 
-        # Check for fabrication indicators
+        # ตรวจสอบ fabrication indicators
         for phrase in self.fabrication_indicators:
-            if phrase in answer_lower:
+            phrase_tokens = set(self.nlp_processor.tokenize(phrase.lower()))
+            if phrase_tokens.issubset(answer_tokens):
                 detected_issues.append(f"Fabrication indicator: '{phrase}'")
 
-        # If context is provided, check if answer contains information not in context
+        # ตรวจสอบ context coverage ใช้ semantic similarity
         if context:
-            context_coverage = self._check_context_coverage(answer, context)
+            context_coverage = self.nlp_processor.calculate_similarity(answer, context)
             if context_coverage < self.context_coverage_threshold:
                 detected_issues.append(f"Low context coverage: {context_coverage:.2f}")
 
@@ -346,23 +314,3 @@ class HallucinationValidator(BaseGuardrail):
             message="No hallucination indicators detected",
             confidence=0.9,
         )
-
-    def _check_context_coverage(self, answer: str, context: str) -> float:
-        """
-        Calculate how much of the answer is covered by the context.
-
-        This is a simple implementation using keyword overlap.
-        For production use, consider more sophisticated semantic matching.
-        """
-        # Simple keyword-based coverage check
-        answer_words = set(answer.lower().split())
-        context_words = set(context.lower().split())
-
-        if not answer_words:
-            return 1.0
-
-        # Calculate overlap
-        overlap = len(answer_words & context_words)
-        coverage = overlap / len(answer_words)
-
-        return min(coverage, 1.0)
