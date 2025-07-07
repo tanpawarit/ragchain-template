@@ -10,7 +10,7 @@ __version__ = "0.1.0"
 
 # Import main components
 from .base import BaseGuardrail, GuardrailResponse, GuardrailResult
-from .manager import GuardrailManager
+from .guardrails_manager import GuardrailManager
 
 # Import NLP utilities
 from .nlp_utils import (

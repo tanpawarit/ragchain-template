@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from src.prompts.prompt_manager import PromptManager
-from src.utils.config.manager import get_config
+from src.utils.config.config_manager import get_config
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -39,6 +39,7 @@ class AppConfig:
     prompt_template_name: str
     prompt_template_version: Optional[str]
     guardrails_config: Dict[str, Any]
+    tools_config: Dict[str, Any]
 
     # ---------------------------------------------------------------------
     # Construction helpers
@@ -84,6 +85,9 @@ class AppConfig:
         # Load guardrails config
         guardrails_config = model_cfg.get("guardrails", {"enabled": False})
 
+        # Load tools config
+        tools_config = model_cfg.get("tools", {"enabled": False})
+
         return cls(
             embedding_model_name=model_cfg["models"]["embedding"],
             llm_model_name=model_cfg["models"]["llm"],
@@ -97,4 +101,5 @@ class AppConfig:
             prompt_template_name=prompt_template_name,
             prompt_template_version=prompt_template_version,
             guardrails_config=guardrails_config,
+            tools_config=tools_config,
         )

@@ -19,6 +19,16 @@ prompt_config:
   template_name: "sales_support"
   version: "v1"
 
+# Tools configuration
+tools:
+  enabled: true  # Master switch
+  calculator:
+    enabled: true
+    tools: [multiply, calculate_expression, fibonacci, statistics]
+  text_analyzer:
+    enabled: true
+    tools: [count_words, analyze_text]
+
 # Guardrails configuration
 guardrails:
   enabled: true

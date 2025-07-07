@@ -5,7 +5,7 @@ Tests for the guardrails system.
 import unittest
 
 from src.guardrails.base import GuardrailResponse, GuardrailResult
-from src.guardrails.manager import GuardrailManager
+from src.guardrails.guardrails_manager import GuardrailManager
 from src.guardrails.validators.input_validators import (
     InputLengthValidator,
     ProfanityValidator,

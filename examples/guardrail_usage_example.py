@@ -15,7 +15,7 @@ sys.path.insert(0, str(project_root))
 
 # Import required modules
 # ruff: noqa: E402
-from src.guardrails.manager import GuardrailManager
+from src.guardrails.guardrails_manager import GuardrailManager
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)

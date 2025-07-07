@@ -2,7 +2,7 @@ from datetime import datetime
 
 from src.components.ragchain_runner import RAGChainRunner
 from src.utils.config.app_config import AppConfig
-from src.utils.config.manager import get_config
+from src.utils.config.config_manager import get_config
 from src.utils.logger import get_logger
 from src.utils.pipeline.mlflow_tracker import MLflowTracker
 from src.utils.pipeline.vectorstore_manager import load_vectorstore

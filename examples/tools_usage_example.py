@@ -1,172 +1,111 @@
+#!/usr/bin/env python3
 """
-Example usage of tools with cachetools and rate limiting.
+Example script demonstrating RAG chatbot with tools enabled.
 
-This example demonstrates how to use the tools with caching and rate limiting.
+This script shows how to:
+1. Configure tools in the model config
+2. Use the RAG chatbot with tools enabled
+3. Ask questions that can benefit from tool usage
 """
 
-import time
+import sys
+from pathlib import Path
 
-from src.tools.calculator import calculate_expression, fibonacci, multiply, statistics
-from src.tools.utils.cache_manager import clear_cache, get_cache_stats
+# Add the src directory to the Python path
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+from src.components.ragchain_runner import RAGChainRunner
+from src.utils.config.app_config import AppConfig
+from src.utils.logger import get_logger
+from src.utils.pipeline.vectorstore_manager import load_vectorstore
+
+logger = get_logger(__name__)
 
 
-def main():
-    """Main function to demonstrate tool usage."""
-    print("=== Tools Usage Example with Cachetools ===\n")
+def main() -> None:
+    """Demonstrate RAG chatbot with tools."""
 
-    # Test calculator tools
-    print("1. Testing Calculator Tools:")
-    print("-" * 40)
+    # Load configuration
+    cfg = AppConfig.from_files("configs/model_config.yaml", "config.yaml")
 
-    # Test multiply - using invoke method
-    print("Testing multiply...")
-    try:
-        # Call the tool using invoke method
-        result1 = multiply.invoke({"a": 5.0, "b": 10.0})
-        print(f"multiply(5.0, 10.0) = {result1}")
+    # Load vectorstore
+    logger.info("🔄 Loading vectorstore...")
+    vectorstore = load_vectorstore(cfg)
 
-        # Call again to test caching
-        result2 = multiply.invoke({"a": 5.0, "b": 10.0})
-        print(f"multiply(5.0, 10.0) [cached] = {result2}")
+    # Create RAG runner
+    rag = RAGChainRunner(cfg, vectorstore=vectorstore)
 
-    except Exception as e:
-        print(f"Error calling multiply: {e}")
+    # Print tool information
+    if rag.tools_enabled:
+        tool_info = rag.tool_manager.get_tool_info()
+        print("🛠️  Tools enabled!")
+        print(f"📊 Total tools: {tool_info['total_tools']}")
+        print("📋 Available tools:")
+        for tool in tool_info["tools"]:
+            print(f"   • {tool['name']}: {tool['description']}")
+    else:
+        print("❌ Tools are disabled")
 
-    print()
+    print("\n" + "=" * 60)
+    print("🤖 RAG Chatbot with Tools - Example Questions")
+    print("=" * 60)
 
-    # Test calculate_expression
-    print("Testing calculate_expression...")
-    try:
-        result = calculate_expression.invoke({"expression": "2 + 3 * 4"})
-        print(f"calculate_expression('2 + 3 * 4') = {result}")
-
-        # Test with different expression
-        result = calculate_expression.invoke({"expression": "(10 + 5) / 3"})
-        print(f"calculate_expression('(10 + 5) / 3') = {result}")
-
-    except Exception as e:
-        print(f"Error calling calculate_expression: {e}")
-
-    print()
-
-    # Test fibonacci
-    print("Testing fibonacci...")
-    try:
-        # Test fibonacci with small numbers
-        for n in [5, 10, 15]:
-            start_time = time.time()
-            result = fibonacci.invoke({"n": n})
-            end_time = time.time()
-            print(f"fibonacci({n}) = {result} (time: {end_time - start_time:.4f}s)")
-
-        # Test calling the same number again (should be cached)
-        start_time = time.time()
-        result = fibonacci.invoke({"n": 10})
-        end_time = time.time()
-        print(f"fibonacci(10) [cached] = {result} (time: {end_time - start_time:.4f}s)")
-
-    except Exception as e:
-        print(f"Error calling fibonacci: {e}")
-
-    print()
-
-    # Test statistics
-    print("Testing statistics...")
-    try:
-        numbers = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
-        result = statistics.invoke({"numbers": numbers})
-        print(f"statistics({numbers}):")
-        print(f"  Count: {result['count']}")
-        print(f"  Sum: {result['sum']}")
-        print(f"  Mean: {result['mean']:.2f}")
-        print(f"  Median: {result['median']}")
-        print(f"  Min: {result['min']}")
-        print(f"  Max: {result['max']}")
-        print(f"  Std Dev: {result['std_dev']:.2f}")
-
-        # Call again to test caching
-        result2 = statistics.invoke({"numbers": numbers})
-        print(f"  [Cached call] Mean: {result2['mean']:.2f}")
-
-    except Exception as e:
-        print(f"Error calling statistics: {e}")
-
-    print()
-
-    # Test rate limiting
-    print("2. Testing Rate Limiting:")
-    print("-" * 40)
-
-    print("Testing rate limiting with multiply...")
-    try:
-        # Try to call the function multiple times quickly
-        for i in range(3):
-            result = multiply.invoke({"a": i + 1.0, "b": 2.0})
-            print(f"Call {i + 1}: multiply({i + 1}, 2) = {result}")
-            time.sleep(0.1)
-
-        # Try to exceed rate limit
-        print("Attempting to exceed rate limit...")
-        try:
-            for i in range(15):  # This should exceed the 10 calls/minute limit
-                result = multiply.invoke({"a": i + 1.0, "b": 3.0})
-                print(f"Rapid call {i + 1}: multiply({i + 1}, 3) = {result}")
-        except RuntimeError as e:
-            print(f"✓ Rate limit enforced: {e}")
-
-    except Exception as e:
-        print(f"Error testing rate limiting: {e}")
-
-    print()
-
-    # Show cache statistics
-    print("3. Cache Statistics:")
-    print("-" * 40)
-    try:
-        stats = get_cache_stats()
-        print(f"Cache type: {stats['cache_type']}")
-        print(f"Current size: {stats['current_size']}")
-        print(f"Max size: {stats['max_size']}")
-        print(f"TTL: {stats['ttl']} seconds")
-    except Exception as e:
-        print(f"Error getting cache stats: {e}")
-
-    print()
-
-    # Test cache clearing
-    print("4. Cache Management:")
-    print("-" * 40)
-    try:
-        print("Clearing cache...")
-        clear_cache()
-        print("Cache cleared!")
-
-        # Show updated stats
-        stats = get_cache_stats()
-        print(f"Cache size after clearing: {stats['current_size']}")
-    except Exception as e:
-        print(f"Error clearing cache: {e}")
-
-    print()
-
-    # Test tool descriptions
-    print("5. Tool Information:")
-    print("-" * 40)
-
-    tools = [
-        multiply,
-        calculate_expression,
-        fibonacci,
-        statistics,
+    # Example questions that can benefit from tools
+    example_questions = [
+        "What is 15 multiplied by 23?",
+        "Calculate the expression: (100 + 50) * 2 - 25",
+        "What is the 10th Fibonacci number?",
+        "Analyze this text: 'Hello world! This is a sample text for analysis.'",
+        "Count the words in this sentence: 'The quick brown fox jumps over the lazy dog.'",
+        "Calculate statistics for these numbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]",
     ]
 
-    for tool in tools:
-        print(f"Tool: {tool.name}")
-        print(f"Description: {tool.description}")
-        print(f"Args: {tool.args}")
-        print()
+    print("\n📝 Example questions you can ask:")
+    for i, question in enumerate(example_questions, 1):
+        print(f"{i}. {question}")
 
-    print("=== Tools Example Complete ===")
+    print(
+        "\n💡 You can also ask questions about your documents combined with tool usage!"
+    )
+    print(
+        "   For example: 'Based on the documents, calculate 25% of the total revenue'"
+    )
+
+    print("\n" + "-" * 60)
+    print("🔍 Interactive Mode - Ask your questions!")
+    print("   (Type 'quit', 'exit', or 'bye' to exit)")
+    print("-" * 60)
+
+    # Interactive loop
+    question_count = 0
+    while True:
+        try:
+            question = input("\n💬 Your question: ").strip()
+
+            # Check for exit commands
+            if question.lower() in ["quit", "exit", "bye", "ออก", "จบ", "เลิก"]:
+                print("👋 Thank you for using the RAG Chatbot with Tools!")
+                break
+
+            # Skip empty questions
+            if not question:
+                print("⚠️  Please enter a question")
+                continue
+
+            question_count += 1
+            print(f"\n🧠 Processing question #{question_count}...")
+
+            # Get answer
+            answer = rag.answer(question)
+            print(f"\n🤖 Answer: {answer}")
+
+        except KeyboardInterrupt:
+            print("\n\n👋 Thank you for using the RAG Chatbot with Tools!")
+            break
+        except Exception as e:
+            logger.error(f"Error occurred: {e}")
+            print(f"❌ Error: {e}")
+            print("💡 Try asking a different question or type 'quit' to exit")
 
 
 if __name__ == "__main__":

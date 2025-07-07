@@ -20,6 +20,12 @@ A production-ready RAG template for building specialized chatbots with advanced 
 - **Prompt Management**: YAML-based templates with version control
 - **Evaluation**: Comprehensive metrics for retrieval and generation
 
+### Configurable Tools System
+- **Mathematical Operations**: Calculator tools with caching and rate limiting
+- **Text Analysis**: Word counting, language detection, and readability scoring
+- **Agent Mode**: Dynamic tool selection based on user queries
+- **Performance Optimized**: Built-in caching and rate limiting for production use
+
 ## Architecture
 
 ```
@@ -50,9 +56,19 @@ A production-ready RAG template for building specialized chatbots with advanced 
                                     ┌───────────────────┐
                                     │  Response         │
                                     └───────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│  Tools System (Agent Mode)                                          │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────┐  │
+│  │  Calculator     │  │  Text Analyzer  │  │  Custom Tools       │  │
+│  │  • Math ops     │  │  • Text proc    │  │  • rate limiting    │  │
+│  │  • Statistics   │  │  • Language     │  │  • caching          │  │
+│  │  • Functions    │  │  • Analysis     │  │  • security         │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-The system integrates NLP capabilities throughout the pipeline, with special emphasis on the guardrails component that ensures response quality and safety using pythainlp (Thai) and spacy (English).
+The system integrates NLP capabilities throughout the pipeline, with special emphasis on the guardrails component that ensures response quality and safety using pythainlp (Thai) and spacy (English). When tools are enabled, the system switches to agent mode, allowing dynamic tool selection for calculations, text analysis, and other operations.
 
 ## Getting Started
 
@@ -85,15 +101,17 @@ For more details, check out our [Quick Start Guide](docs/quickstart.md).
 - [System Evaluation](docs/evaluation.md) - Evaluation framework
 - [Prompt Management](docs/prompts.md) - Domain-specific prompt engineering
 - [NLP Setup](docs/nlp_setup.md) - Multilingual NLP features
+- [Tools Configuration](docs/tools_configuration.md) - Configurable tools system
 
 ## Use Cases
 
 This template works well for:
 
-- **Customer Support**: FAQ automation with escalation logic
-- **Sales Enablement**: Product knowledge and objection handling
-- **Technical Documentation**: API docs and troubleshooting
-- **Research Assistant**: Paper summarization and citation tracking
+- **Customer Support**: FAQ automation with escalation logic and calculations
+- **Sales Enablement**: Product knowledge, objection handling, and pricing calculations
+- **Technical Documentation**: API docs, troubleshooting, and code analysis
+- **Research Assistant**: Paper summarization, citation tracking, and data analysis
+- **Data Analysis**: Statistical calculations and text processing with built-in tools
 
 ## Tech Stack
 

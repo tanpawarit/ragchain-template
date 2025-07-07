@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Optional
 
 import mlflow
+from langchain.agents import AgentExecutor, create_openai_functions_agent
 from langchain_community.vectorstores import FAISS
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -17,6 +18,7 @@ from langchain_core.runnables import (
 from langchain_openai import ChatOpenAI
 from pydantic import SecretStr
 
+from src.tools import ToolManager
 from src.utils.config.app_config import AppConfig
 from src.utils.logger import get_logger
 from src.utils.pipeline.mlflow_tracker import MLflowTracker
@@ -60,6 +62,12 @@ class RAGChainRunner:
         )
 
         # ------------------------------------------------------------------
+        # Tools setup
+        # ------------------------------------------------------------------
+        self.tool_manager = ToolManager(cfg.tools_config)
+        self.tools_enabled = self.tool_manager.is_tools_enabled()
+
+        # ------------------------------------------------------------------
         # LLM + Prompt
         # ------------------------------------------------------------------
         self.llm = ChatOpenAI(
@@ -70,14 +78,67 @@ class RAGChainRunner:
         prompt = ChatPromptTemplate.from_template(cfg.prompt_template)
 
         # ------------------------------------------------------------------
-        # Chain definition
+        # Chain definition - with or without tools
         # ------------------------------------------------------------------
-        self.chain = (
-            RunnableParallel(context=self.retriever, question=RunnablePassthrough())
-            | prompt
-            | self.llm
-            | StrOutputParser()
+        if self.tools_enabled:
+            # Create agent with tools
+            self.agent = self._create_agent_with_tools()
+            logger.info(
+                f"Created agent with {len(self.tool_manager.get_enabled_tools())} tools"
+            )
+        else:
+            # Create standard RAG chain without tools
+            self.chain = (
+                RunnableParallel(context=self.retriever, question=RunnablePassthrough())
+                | prompt
+                | self.llm
+                | StrOutputParser()
+            )
+            logger.info("Created standard RAG chain without tools")
+
+    def _create_agent_with_tools(self) -> AgentExecutor:
+        """Create an agent with tools and RAG capabilities."""
+        tools = self.tool_manager.get_enabled_tools()
+
+        # Create a custom prompt that includes RAG context
+        agent_prompt = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    """You are a helpful assistant with access to tools and a knowledge base.
+            
+                    When answering questions:
+                    1. First, search the knowledge base for relevant information
+                    2. Use available tools when they can help provide better answers
+                    3. Combine information from the knowledge base with tool results
+                    4. Always provide clear, accurate, and helpful responses
+
+                    Available context from knowledge base:
+                    {context}
+
+                    Available tools: {tools}
+                    Tool names: {tool_names}""",
+                ),
+                ("human", "{input}"),
+                ("placeholder", "{agent_scratchpad}"),
+            ]
         )
+
+        # Create the agent
+        agent = create_openai_functions_agent(
+            llm=self.llm, tools=tools, prompt=agent_prompt
+        )
+
+        # Create agent executor
+        agent_executor = AgentExecutor(
+            agent=agent,
+            tools=tools,
+            verbose=True,
+            handle_parsing_errors=True,
+            max_iterations=5,
+        )
+
+        return agent_executor
 
     # ------------------------------------------------------------------
     # Public helpers
@@ -94,6 +155,53 @@ class RAGChainRunner:
         """
         start_time = time.time()
 
+        if self.tools_enabled:
+            # Use agent with tools
+            reply = self._answer_with_agent(question)
+        else:
+            # Use standard RAG chain
+            reply = self._answer_with_chain(question)
+
+        # Calculate latency
+        latency = time.time() - start_time
+
+        # Production-ready MLflow tracking with separate run per query
+        if self.tracker:
+            self._log_query_to_mlflow(
+                question=question,
+                reply=reply,
+                retrieved_docs=getattr(self, "_last_retrieved_docs", []),
+                latency=latency,
+                user_id=user_id,
+            )
+
+        return reply
+
+    def _answer_with_agent(self, question: str) -> str:
+        """Answer using agent with tools."""
+        # Get context from retriever
+        retrieved_docs = self.retriever.invoke(question)
+        self._last_retrieved_docs = retrieved_docs  # Store for logging
+
+        # Format context
+        context = "\n\n".join([doc.page_content for doc in retrieved_docs])
+
+        # Prepare input for agent
+        agent_input = {
+            "input": question,
+            "context": context,
+            "tools": [tool.name for tool in self.tool_manager.get_enabled_tools()],
+            "tool_names": ", ".join(
+                [tool.name for tool in self.tool_manager.get_enabled_tools()]
+            ),
+        }
+
+        # Run agent
+        result = self.agent.invoke(agent_input)
+        return result.get("output", "Sorry, I couldn't process your request.")
+
+    def _answer_with_chain(self, question: str) -> str:
+        """Answer using standard RAG chain without tools."""
         # Generate answer and capture intermediate results for logging
         retrieved_docs = []
 
@@ -111,20 +219,7 @@ class RAGChainRunner:
         )
 
         reply = chain_with_capture.invoke(question)
-
-        # Calculate latency
-        latency = time.time() - start_time
-
-        # Production-ready MLflow tracking with separate run per query
-        if self.tracker:
-            self._log_query_to_mlflow(
-                question=question,
-                reply=reply,
-                retrieved_docs=retrieved_docs,
-                latency=latency,
-                user_id=user_id,
-            )
-
+        self._last_retrieved_docs = retrieved_docs  # Store for logging
         return reply
 
     def _log_query_to_mlflow(
@@ -165,8 +260,21 @@ class RAGChainRunner:
                         "prompt_template_name": self.cfg.prompt_template_name,
                         "prompt_template_version": self.cfg.prompt_template_version
                         or "latest",
+                        "tools_enabled": self.tools_enabled,
+                        "num_tools": len(self.tool_manager.get_enabled_tools())
+                        if self.tools_enabled
+                        else 0,
+                        "execution_mode": "agent" if self.tools_enabled else "chain",
                     }
                 )
+
+                # Log tool information if tools are enabled
+                if self.tools_enabled:
+                    tool_info = self.tool_manager.get_tool_info()
+                    mlflow.log_text(
+                        json.dumps(tool_info, indent=2, ensure_ascii=False),
+                        "tool_info.json",
+                    )
 
                 # Log performance metrics
                 mlflow.log_metrics(

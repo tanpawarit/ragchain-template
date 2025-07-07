@@ -1,5 +1,5 @@
 from .config.app_config import AppConfig
-from .config.manager import get_config
+from .config.config_manager import get_config
 from .logger import get_logger, setup_logging
 from .pipeline.mlflow_tracker import MLflowTracker
 from .pipeline.vectorstore_manager import load_vectorstore

@@ -129,7 +129,7 @@ GuardrailResponse has three possible states:
 
 ## Advanced Configuration
 
-For detailed configuration options, see `GuardrailManagerConfig` class in `manager.py`.
+For detailed configuration options, see `GuardrailManagerConfig` class in `guardrails_manager.py`.
 
 ## Key Features
 
