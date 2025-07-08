@@ -1,6 +1,6 @@
 - Implement LLM memory
-- test tool caching
-- implement model config เปิดปิด tool ได้
+- migrate mlflow to langfuse
+- test tool caching 
 - tool caching เเบบ Customer isolation, Rate limiting แชร์ระหว่าง instances 
 - Set Evaluation Folder Script
 - Write notebook tutorial
